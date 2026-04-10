@@ -24,8 +24,11 @@
                     <div id="season-checkboxes" class="checkbox-list"></div>
                 </div>
             </div>
-            <div class="table-header-row">
-                <h2>רשימת משחקים</h2>
+            <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; align-items: baseline; gap: 10px;">
+                    <h2 style="margin:0;">רשימת משחקים</h2>
+                    <span id="game-count" style="font-size: 0.9rem; color: #64748b; font-weight: 600;"></span>
+                </div>
                 <button class="adv-toggle-btn" onclick="toggleAdvancedMode()">
                     <span class="dot"></span> ADV Mode
                 </button>
@@ -34,8 +37,8 @@
         </section>
 
         <section id="sec-players" style="display:none;">
-            <div class="table-header-row">
-                <h2>ממוצעי שחקנים</h2>
+            <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin:0;">ממוצעי שחקנים</h2>
                 <button class="adv-toggle-btn" onclick="toggleAdvancedMode()">
                     <span class="dot"></span> ADV Mode
                 </button>
@@ -46,8 +49,8 @@
         </section>
 
         <section id="sec-teams" style="display:none;">
-            <div class="table-header-row">
-                <h2>סטטיסטיקה קבוצתית</h2>
+            <div class="table-header-row" style="margin-bottom: 15px;">
+                <h2 style="margin:0;">סטטיסטיקה קבוצתית</h2>
             </div>
             <div class="table-wrapper">
                 <div id="teams-container"></div>

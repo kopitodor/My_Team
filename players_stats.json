@@ -84,7 +84,7 @@
   {
     "game_id":1,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":17,
     "PTS":2,
     "2PA":5,
@@ -166,7 +166,7 @@
   {
     "game_id":1,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":21,
     "2PA":15,
@@ -207,7 +207,7 @@
   {
     "game_id":1,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":38,
     "PTS":12,
     "2PA":6,
@@ -248,7 +248,7 @@
   {
     "game_id":1,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":4,
     "2PA":2,
@@ -289,7 +289,7 @@
   {
     "game_id":1,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":2,
     "2PA":4,
@@ -330,7 +330,7 @@
   {
     "game_id":2,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":6,
     "2PA":9,
@@ -371,7 +371,7 @@
   {
     "game_id":2,
     "player_id":2,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":9,
     "2PA":6,
@@ -412,7 +412,7 @@
   {
     "game_id":2,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":3,
     "2PA":1,
@@ -494,7 +494,7 @@
   {
     "game_id":2,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":12,
     "2PA":9,
@@ -576,7 +576,7 @@
   {
     "game_id":2,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":22,
     "2PA":12,
@@ -699,7 +699,7 @@
   {
     "game_id":3,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":4,
     "2PA":9,
@@ -740,7 +740,7 @@
   {
     "game_id":3,
     "player_id":2,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":3,
     "2PA":1,
@@ -863,7 +863,7 @@
   {
     "game_id":3,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":39,
     "PTS":15,
     "2PA":10,
@@ -904,7 +904,7 @@
   {
     "game_id":3,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":6,
     "2PA":3,
@@ -945,7 +945,7 @@
   {
     "game_id":3,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":4,
     "2PA":6,
@@ -1027,7 +1027,7 @@
   {
     "game_id":4,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":15,
     "PTS":2,
     "2PA":6,
@@ -1150,7 +1150,7 @@
   {
     "game_id":4,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":23,
     "2PA":16,
@@ -1191,7 +1191,7 @@
   {
     "game_id":4,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":8,
     "2PA":3,
@@ -1232,7 +1232,7 @@
   {
     "game_id":4,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":19,
     "2PA":6,
@@ -1273,7 +1273,7 @@
   {
     "game_id":4,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":11,
     "2PA":6,
@@ -1355,7 +1355,7 @@
   {
     "game_id":5,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":4,
     "2PA":5,
@@ -1437,7 +1437,7 @@
   {
     "game_id":5,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":20,
     "PTS":1,
     "2PA":1,
@@ -1478,7 +1478,7 @@
   {
     "game_id":5,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":13,
     "2PA":7,
@@ -1642,7 +1642,7 @@
   {
     "game_id":5,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":17,
     "2PA":7,
@@ -1683,7 +1683,7 @@
   {
     "game_id":5,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":15,
     "PTS":3,
     "2PA":2,
@@ -1765,7 +1765,7 @@
   {
     "game_id":6,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":4,
     "2PA":7,
@@ -1847,7 +1847,7 @@
   {
     "game_id":6,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":17,
     "PTS":1,
     "2PA":0,
@@ -1888,7 +1888,7 @@
   {
     "game_id":6,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":7,
     "2PA":4,
@@ -1970,7 +1970,7 @@
   {
     "game_id":6,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":5,
     "2PA":8,
@@ -2011,7 +2011,7 @@
   {
     "game_id":6,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":13,
     "2PA":10,
@@ -2134,7 +2134,7 @@
   {
     "game_id":7,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":23,
     "PTS":4,
     "2PA":5,
@@ -2298,7 +2298,7 @@
   {
     "game_id":7,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":19,
     "2PA":14,
@@ -2339,7 +2339,7 @@
   {
     "game_id":7,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":23,
     "PTS":2,
     "2PA":5,
@@ -2380,7 +2380,7 @@
   {
     "game_id":7,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":13,
     "2PA":8,
@@ -2421,7 +2421,7 @@
   {
     "game_id":7,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":9,
     "2PA":1,
@@ -2544,7 +2544,7 @@
   {
     "game_id":8,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":9,
     "2PA":6,
@@ -2585,7 +2585,7 @@
   {
     "game_id":8,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":16,
     "2PA":5,
@@ -2667,7 +2667,7 @@
   {
     "game_id":8,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":8,
     "2PA":11,
@@ -2708,7 +2708,7 @@
   {
     "game_id":8,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":17,
     "2PA":13,
@@ -2749,7 +2749,7 @@
   {
     "game_id":8,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":5,
     "2PA":3,
@@ -2913,7 +2913,7 @@
   {
     "game_id":9,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":0,
     "2PA":2,
@@ -2954,7 +2954,7 @@
   {
     "game_id":9,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":19,
     "2PA":6,
@@ -2995,7 +2995,7 @@
   {
     "game_id":9,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":13,
     "2PA":8,
@@ -3077,7 +3077,7 @@
   {
     "game_id":9,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":26,
     "2PA":9,
@@ -3118,7 +3118,7 @@
   {
     "game_id":9,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":9,
     "2PA":1,
@@ -3241,7 +3241,7 @@
   {
     "game_id":10,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":9,
     "2PA":8,
@@ -3323,7 +3323,7 @@
   {
     "game_id":10,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":5,
     "2PA":4,
@@ -3405,7 +3405,7 @@
   {
     "game_id":10,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":9,
     "2PA":6,
@@ -3446,7 +3446,7 @@
   {
     "game_id":10,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":8,
     "2PA":2,
@@ -3528,7 +3528,7 @@
   {
     "game_id":10,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":16,
     "PTS":3,
     "2PA":1,
@@ -3651,7 +3651,7 @@
   {
     "game_id":11,
     "player_id":2,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":5,
     "2PA":2,
@@ -3774,7 +3774,7 @@
   {
     "game_id":11,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":9,
     "2PA":7,
@@ -3815,7 +3815,7 @@
   {
     "game_id":11,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":23,
     "2PA":7,
@@ -3856,7 +3856,7 @@
   {
     "game_id":11,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":19,
     "PTS":8,
     "2PA":1,
@@ -3938,7 +3938,7 @@
   {
     "game_id":11,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":18,
     "PTS":4,
     "2PA":2,
@@ -4061,7 +4061,7 @@
   {
     "game_id":12,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":39,
     "PTS":17,
     "2PA":5,
@@ -4102,7 +4102,7 @@
   {
     "game_id":12,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":17,
     "2PA":11,
@@ -4143,7 +4143,7 @@
   {
     "game_id":12,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":37,
     "PTS":20,
     "2PA":9,
@@ -4184,7 +4184,7 @@
   {
     "game_id":12,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":11,
     "2PA":3,
@@ -4266,7 +4266,7 @@
   {
     "game_id":12,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":4,
     "2PA":2,
@@ -4348,7 +4348,7 @@
   {
     "game_id":13,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":10,
     "2PA":7,
@@ -4389,7 +4389,7 @@
   {
     "game_id":13,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":17,
     "2PA":8,
@@ -4471,7 +4471,7 @@
   {
     "game_id":13,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":29,
     "2PA":15,
@@ -4512,7 +4512,7 @@
   {
     "game_id":13,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":7,
     "2PA":5,
@@ -4594,7 +4594,7 @@
   {
     "game_id":13,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":3,
     "2PA":1,
@@ -4799,7 +4799,7 @@
   {
     "game_id":14,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":13,
     "2PA":3,
@@ -4881,7 +4881,7 @@
   {
     "game_id":14,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":2,
     "2PA":4,
@@ -4963,7 +4963,7 @@
   {
     "game_id":14,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":13,
     "2PA":4,
@@ -5004,7 +5004,7 @@
   {
     "game_id":14,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":9,
     "2PA":2,
@@ -5086,7 +5086,7 @@
   {
     "game_id":14,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":20,
     "PTS":3,
     "2PA":2,
@@ -5250,7 +5250,7 @@
   {
     "game_id":15,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":6,
     "2PA":6,
@@ -5332,7 +5332,7 @@
   {
     "game_id":15,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":14,
     "2PA":2,
@@ -5373,7 +5373,7 @@
   {
     "game_id":15,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":5,
     "2PA":13,
@@ -5455,7 +5455,7 @@
   {
     "game_id":15,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":21,
     "2PA":15,
@@ -5496,7 +5496,7 @@
   {
     "game_id":15,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":8,
     "2PA":2,
@@ -5578,7 +5578,7 @@
   {
     "game_id":16,
     "player_id":2,
-    "starter":"X",
+    "starter":1,
     "MIN":20,
     "PTS":13,
     "2PA":4,
@@ -5701,7 +5701,7 @@
   {
     "game_id":16,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":6,
     "2PA":6,
@@ -5742,7 +5742,7 @@
   {
     "game_id":16,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":5,
     "2PA":4,
@@ -5824,7 +5824,7 @@
   {
     "game_id":16,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":19,
     "2PA":10,
@@ -5865,7 +5865,7 @@
   {
     "game_id":16,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":2,
     "2PA":4,
@@ -5947,7 +5947,7 @@
   {
     "game_id":17,
     "player_id":2,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":14,
     "2PA":5,
@@ -6111,7 +6111,7 @@
   {
     "game_id":17,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":16,
     "2PA":7,
@@ -6152,7 +6152,7 @@
   {
     "game_id":17,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":5,
     "2PA":4,
@@ -6193,7 +6193,7 @@
   {
     "game_id":17,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":8,
     "2PA":3,
@@ -6275,7 +6275,7 @@
   {
     "game_id":17,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":5,
     "2PA":7,
@@ -6316,7 +6316,7 @@
   {
     "game_id":18,
     "player_id":2,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":5,
     "2PA":5,
@@ -6480,7 +6480,7 @@
   {
     "game_id":18,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":2,
     "2PA":6,
@@ -6521,7 +6521,7 @@
   {
     "game_id":18,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":8,
     "2PA":6,
@@ -6603,7 +6603,7 @@
   {
     "game_id":18,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":10,
     "2PA":9,
@@ -6644,7 +6644,7 @@
   {
     "game_id":18,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":11,
     "2PA":6,
@@ -6849,7 +6849,7 @@
   {
     "game_id":19,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":11,
     "2PA":9,
@@ -6890,7 +6890,7 @@
   {
     "game_id":19,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":40,
     "PTS":24,
     "2PA":11,
@@ -6972,7 +6972,7 @@
   {
     "game_id":19,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":13,
     "2PA":14,
@@ -7054,7 +7054,7 @@
   {
     "game_id":19,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":39,
     "PTS":6,
     "2PA":5,
@@ -7136,7 +7136,7 @@
   {
     "game_id":19,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":18,
     "PTS":2,
     "2PA":3,
@@ -7259,7 +7259,7 @@
   {
     "game_id":20,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":22,
     "2PA":10,
@@ -7382,7 +7382,7 @@
   {
     "game_id":20,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":14,
     "PTS":0,
     "2PA":4,
@@ -7464,7 +7464,7 @@
   {
     "game_id":20,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":2,
     "2PA":3,
@@ -7505,7 +7505,7 @@
   {
     "game_id":20,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":9,
     "2PA":3,
@@ -7587,7 +7587,7 @@
   {
     "game_id":20,
     "player_id":20,
-    "starter":"X",
+    "starter":1,
     "MIN":14,
     "PTS":4,
     "2PA":3,
@@ -7751,7 +7751,7 @@
   {
     "game_id":21,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":6,
     "2PA":2,
@@ -7833,7 +7833,7 @@
   {
     "game_id":21,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":12,
     "2PA":10,
@@ -7915,7 +7915,7 @@
   {
     "game_id":21,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":15,
     "PTS":6,
     "2PA":2,
@@ -7956,7 +7956,7 @@
   {
     "game_id":21,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":5,
     "2PA":2,
@@ -7997,7 +7997,7 @@
   {
     "game_id":21,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":21,
     "PTS":1,
     "2PA":1,
@@ -8120,7 +8120,7 @@
   {
     "game_id":22,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":9,
     "2PA":8,
@@ -8161,7 +8161,7 @@
   {
     "game_id":22,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":27,
     "2PA":5,
@@ -8243,7 +8243,7 @@
   {
     "game_id":22,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":0,
     "2PA":3,
@@ -8325,7 +8325,7 @@
   {
     "game_id":22,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":5,
     "2PA":2,
@@ -8366,7 +8366,7 @@
   {
     "game_id":22,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":4,
     "2PA":4,
@@ -8448,7 +8448,7 @@
   {
     "game_id":23,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":14,
     "2PA":12,
@@ -8489,7 +8489,7 @@
   {
     "game_id":23,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":22,
     "2PA":5,
@@ -8530,7 +8530,7 @@
   {
     "game_id":23,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":2,
     "2PA":8,
@@ -8571,7 +8571,7 @@
   {
     "game_id":23,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":19,
     "PTS":0,
     "2PA":0,
@@ -8653,7 +8653,7 @@
   {
     "game_id":23,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":2,
     "2PA":2,
@@ -8735,7 +8735,7 @@
   {
     "game_id":24,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":2,
     "2PA":5,
@@ -8776,7 +8776,7 @@
   {
     "game_id":24,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":18,
     "2PA":9,
@@ -8817,7 +8817,7 @@
   {
     "game_id":24,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":5,
     "2PA":5,
@@ -8899,7 +8899,7 @@
   {
     "game_id":24,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":9,
     "2PA":5,
@@ -8981,7 +8981,7 @@
   {
     "game_id":24,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":4,
     "2PA":4,
@@ -9104,7 +9104,7 @@
   {
     "game_id":25,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":16,
     "PTS":3,
     "2PA":0,
@@ -9145,7 +9145,7 @@
   {
     "game_id":25,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":7,
     "2PA":6,
@@ -9186,7 +9186,7 @@
   {
     "game_id":25,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":17,
     "PTS":2,
     "2PA":4,
@@ -9268,7 +9268,7 @@
   {
     "game_id":25,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":23,
     "PTS":9,
     "2PA":9,
@@ -9350,7 +9350,7 @@
   {
     "game_id":25,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":22,
     "PTS":2,
     "2PA":3,
@@ -9514,7 +9514,7 @@
   {
     "game_id":26,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":4,
     "2PA":7,
@@ -9555,7 +9555,7 @@
   {
     "game_id":26,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":5,
     "2PA":3,
@@ -9596,7 +9596,7 @@
   {
     "game_id":26,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":9,
     "2PA":4,
@@ -9678,7 +9678,7 @@
   {
     "game_id":26,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":14,
     "2PA":9,
@@ -9760,7 +9760,7 @@
   {
     "game_id":26,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":8,
     "2PA":4,
@@ -9883,7 +9883,7 @@
   {
     "game_id":27,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":3,
     "2PA":4,
@@ -9924,7 +9924,7 @@
   {
     "game_id":27,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":9,
     "2PA":1,
@@ -9965,7 +9965,7 @@
   {
     "game_id":27,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":17,
     "2PA":13,
@@ -10006,7 +10006,7 @@
   {
     "game_id":27,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":13,
     "2PA":12,
@@ -10088,7 +10088,7 @@
   {
     "game_id":27,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":5,
     "2PA":2,
@@ -10211,7 +10211,7 @@
   {
     "game_id":28,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":20,
     "PTS":2,
     "2PA":2,
@@ -10375,7 +10375,7 @@
   {
     "game_id":28,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":9,
     "2PA":3,
@@ -10416,7 +10416,7 @@
   {
     "game_id":28,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":15,
     "2PA":6,
@@ -10457,7 +10457,7 @@
   {
     "game_id":28,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":11,
     "2PA":7,
@@ -10498,7 +10498,7 @@
   {
     "game_id":28,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":8,
     "2PA":5,
@@ -10580,7 +10580,7 @@
   {
     "game_id":29,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":19,
     "PTS":2,
     "2PA":5,
@@ -10662,7 +10662,7 @@
   {
     "game_id":29,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":27,
     "2PA":11,
@@ -10703,7 +10703,7 @@
   {
     "game_id":29,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":8,
     "2PA":10,
@@ -10785,7 +10785,7 @@
   {
     "game_id":29,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":3,
     "2PA":3,
@@ -10826,7 +10826,7 @@
   {
     "game_id":29,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":12,
     "2PA":2,
@@ -10990,7 +10990,7 @@
   {
     "game_id":30,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":12,
     "2PA":6,
@@ -11113,7 +11113,7 @@
   {
     "game_id":30,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":8,
     "2PA":9,
@@ -11195,7 +11195,7 @@
   {
     "game_id":30,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":10,
     "2PA":7,
@@ -11236,7 +11236,7 @@
   {
     "game_id":30,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":23,
     "PTS":6,
     "2PA":5,
@@ -11277,7 +11277,7 @@
   {
     "game_id":30,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":10,
     "2PA":6,
@@ -11400,7 +11400,7 @@
   {
     "game_id":31,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":21,
     "2PA":3,
@@ -11441,7 +11441,7 @@
   {
     "game_id":31,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":13,
     "2PA":10,
@@ -11523,7 +11523,7 @@
   {
     "game_id":31,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":10,
     "2PA":7,
@@ -11564,7 +11564,7 @@
   {
     "game_id":31,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":4,
     "2PA":3,
@@ -11605,7 +11605,7 @@
   {
     "game_id":31,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":5,
     "2PA":3,
@@ -11851,7 +11851,7 @@
   {
     "game_id":32,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":5,
     "2PA":10,
@@ -11892,7 +11892,7 @@
   {
     "game_id":32,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":17,
     "PTS":2,
     "2PA":2,
@@ -11933,7 +11933,7 @@
   {
     "game_id":32,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":9,
     "2PA":6,
@@ -11974,7 +11974,7 @@
   {
     "game_id":32,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":10,
     "2PA":7,
@@ -12015,7 +12015,7 @@
   {
     "game_id":32,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":5,
     "2PA":1,
@@ -12056,7 +12056,7 @@
   {
     "game_id":33,
     "player_id":1,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":1,
     "2PA":2,
@@ -12097,7 +12097,7 @@
   {
     "game_id":33,
     "player_id":3,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":0,
     "2PA":2,
@@ -12220,7 +12220,7 @@
   {
     "game_id":33,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":15,
     "2PA":17,
@@ -12302,7 +12302,7 @@
   {
     "game_id":33,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":8,
     "2PA":10,
@@ -12343,7 +12343,7 @@
   {
     "game_id":33,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":15,
     "2PA":1,
@@ -12507,7 +12507,7 @@
   {
     "game_id":34,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":21,
     "PTS":15,
     "2PA":5,
@@ -12548,7 +12548,7 @@
   {
     "game_id":34,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":15,
     "PTS":2,
     "2PA":5,
@@ -12630,7 +12630,7 @@
   {
     "game_id":34,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":12,
     "2PA":5,
@@ -12712,7 +12712,7 @@
   {
     "game_id":34,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":11,
     "2PA":2,
@@ -12794,7 +12794,7 @@
   {
     "game_id":34,
     "player_id":21,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":15,
     "2PA":14,
@@ -12958,7 +12958,7 @@
   {
     "game_id":35,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":28,
     "PTS":9,
     "2PA":2,
@@ -12999,7 +12999,7 @@
   {
     "game_id":35,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":18,
     "PTS":14,
     "2PA":8,
@@ -13040,7 +13040,7 @@
   {
     "game_id":35,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":15,
     "PTS":0,
     "2PA":2,
@@ -13122,7 +13122,7 @@
   {
     "game_id":35,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":4,
     "2PA":3,
@@ -13163,7 +13163,7 @@
   {
     "game_id":35,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":11,
     "2PA":6,
@@ -13327,7 +13327,7 @@
   {
     "game_id":36,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":21,
     "PTS":5,
     "2PA":3,
@@ -13368,7 +13368,7 @@
   {
     "game_id":36,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":5,
     "2PA":10,
@@ -13409,7 +13409,7 @@
   {
     "game_id":36,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":13,
     "PTS":0,
     "2PA":2,
@@ -13491,7 +13491,7 @@
   {
     "game_id":36,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":12,
     "2PA":12,
@@ -13532,7 +13532,7 @@
   {
     "game_id":36,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":6,
     "2PA":4,
@@ -14065,7 +14065,7 @@
   {
     "game_id":38,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":17,
     "2PA":9,
@@ -14106,7 +14106,7 @@
   {
     "game_id":38,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":10,
     "2PA":12,
@@ -14147,7 +14147,7 @@
   {
     "game_id":38,
     "player_id":7,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":0,
     "2PA":6,
@@ -14188,7 +14188,7 @@
   {
     "game_id":38,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":19,
     "2PA":5,
@@ -14352,7 +14352,7 @@
   {
     "game_id":38,
     "player_id":21,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":13,
     "2PA":11,
@@ -14475,7 +14475,7 @@
   {
     "game_id":39,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":17,
     "PTS":3,
     "2PA":2,
@@ -14516,7 +14516,7 @@
   {
     "game_id":39,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":20,
     "PTS":7,
     "2PA":6,
@@ -14598,7 +14598,7 @@
   {
     "game_id":39,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":15,
     "2PA":8,
@@ -14639,7 +14639,7 @@
   {
     "game_id":39,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":17,
     "PTS":10,
     "2PA":6,
@@ -14680,7 +14680,7 @@
   {
     "game_id":39,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":23,
     "PTS":3,
     "2PA":2,
@@ -14844,7 +14844,7 @@
   {
     "game_id":40,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":32,
     "PTS":18,
     "2PA":13,
@@ -14885,7 +14885,7 @@
   {
     "game_id":40,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":25,
     "PTS":5,
     "2PA":1,
@@ -14926,7 +14926,7 @@
   {
     "game_id":40,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":21,
     "PTS":4,
     "2PA":4,
@@ -15049,7 +15049,7 @@
   {
     "game_id":40,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":3,
     "2PA":2,
@@ -15090,7 +15090,7 @@
   {
     "game_id":40,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":26,
     "PTS":7,
     "2PA":5,
@@ -15254,7 +15254,7 @@
   {
     "game_id":41,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":27,
     "PTS":9,
     "2PA":8,
@@ -15336,7 +15336,7 @@
   {
     "game_id":41,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":20,
     "PTS":6,
     "2PA":6,
@@ -15418,7 +15418,7 @@
   {
     "game_id":41,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":30,
     "PTS":8,
     "2PA":11,
@@ -15500,7 +15500,7 @@
   {
     "game_id":41,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":31,
     "PTS":6,
     "2PA":0,
@@ -15623,7 +15623,7 @@
   {
     "game_id":41,
     "player_id":21,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":16,
     "2PA":12,
@@ -15705,7 +15705,7 @@
   {
     "game_id":42,
     "player_id":15,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":0,
     "2PA":1,
@@ -15746,7 +15746,7 @@
   {
     "game_id":42,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":24,
     "PTS":4,
     "2PA":8,
@@ -15787,7 +15787,7 @@
   {
     "game_id":42,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":28,
     "2PA":10,
@@ -15828,7 +15828,7 @@
   {
     "game_id":42,
     "player_id":9,
-    "starter":"X",
+    "starter":1,
     "MIN":21,
     "PTS":0,
     "2PA":0,
@@ -15869,7 +15869,7 @@
   {
     "game_id":42,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":36,
     "PTS":15,
     "2PA":6,
@@ -16115,7 +16115,7 @@
   {
     "game_id":43,
     "player_id":4,
-    "starter":"X",
+    "starter":1,
     "MIN":29,
     "PTS":12,
     "2PA":9,
@@ -16197,7 +16197,7 @@
   {
     "game_id":43,
     "player_id":6,
-    "starter":"X",
+    "starter":1,
     "MIN":33,
     "PTS":8,
     "2PA":6,
@@ -16279,7 +16279,7 @@
   {
     "game_id":43,
     "player_id":8,
-    "starter":"X",
+    "starter":1,
     "MIN":34,
     "PTS":16,
     "2PA":12,
@@ -16320,7 +16320,7 @@
   {
     "game_id":43,
     "player_id":10,
-    "starter":"X",
+    "starter":1,
     "MIN":35,
     "PTS":10,
     "2PA":1,
@@ -16402,7 +16402,7 @@
   {
     "game_id":43,
     "player_id":12,
-    "starter":"X",
+    "starter":1,
     "MIN":19,
     "PTS":4,
     "2PA":2,

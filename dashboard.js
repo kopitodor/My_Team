@@ -5,11 +5,10 @@ let isAdvancedMode = false;
 let sortConfig = { key: null, direction: 'desc', tableId: null };
 let openBoxScores = new Set(); 
 
-// הוספתי את המדדים האלו לרשימת ההסתרה הכללית
 const ALWAYS_HIDDEN = [
     'game_id', 'player_id', 'tech_Fouls', 'reg_FD', 'OFD', 'And1', 
     'team scored with', 'opp scored with', 'poss', 'ended poss', 
-    'opt_DRB', 'opt_ORB', '%DRB', '%ORB', 'ORB%', 'DRB%'
+    'opt_DRB', 'opt_ORB', '%DRB', '%ORB', 'ORB%', 'DRB%', 'ORtg', 'DRtg'
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -38,36 +37,55 @@ async function loadData() {
             fetch('players_stats.json').then(r => r.json()),
             fetch('teams_stats.json').then(r => r.json())
         ]);
-        const pMap = {}; pls.forEach(p => pMap[p.player_id] = p);
-        gs.sort((a,b) => parseDate(a.date) - parseDate(b.date));
+        
+        const pMap = {}; 
+        pls.forEach(p => pMap[p.player_id] = p);
+        
         data = { games: gs, players: pMap, playersStats: ps, teamStats: ts };
+        
         const seasons = getSortedSeasons();
-        if (seasons.length > 0) currentSeason = seasons[seasons.length - 1];
+        if (seasons.length > 0) {
+            // בחירת העונה הכרונולוגית האחרונה כברירת מחדל
+            currentSeason = seasons[seasons.length - 1];
+        }
+        
         updateActiveGamesBySeason();
         renderSeasonFilters();
         renderAll();
     } catch (e) { console.error("Load Error", e); }
 }
 
-function parseDate(d) {
-    if(!d) return new Date(0);
-    const p = d.split('.');
-    return new Date(p[2], p[1]-1, p[0]);
+// פונקציית עזר להמרת dd/mm/yyyy לערך מספרי להשוואה
+function getTimestamp(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return 0;
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return 0;
+    return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
 }
 
+/**
+ * המיון המבוקש:
+ * 1. מוצאים לכל עונה את המשחק המוקדם ביותר שלה.
+ * 2. מסדרים את העונות מהמוקדמת ביותר למאוחרת ביותר.
+ */
 function getSortedSeasons() {
-    const m = {};
+    const minDates = {};
+    
     data.games.forEach(g => {
-        const d = parseDate(g.date);
-        if (!m[g.season] || d < m[g.season]) m[g.season] = d;
+        const ts = getTimestamp(g.date);
+        if (!minDates[g.season] || ts < minDates[g.season]) {
+            minDates[g.season] = ts;
+        }
     });
-    return Object.keys(m).sort((a,b) => m[a] - m[b]);
+
+    return Object.keys(minDates).sort((a, b) => minDates[a] - minDates[b]);
 }
 
 function renderSeasonFilters() {
     const container = document.getElementById('season-checkboxes');
-    container.innerHTML = getSortedSeasons().map(s => `
-        <div class="season-pill ${s === currentSeason ? 'active' : ''}" onclick="selectSeason('${s}')">${s}</div>
+    const seasons = getSortedSeasons();
+    container.innerHTML = seasons.map(s => `
+        <div class="season-pill ${String(s) === String(currentSeason) ? 'active' : ''}" onclick="selectSeason('${s}')">${s}</div>
     `).join('');
 }
 
@@ -81,7 +99,9 @@ function selectSeason(s) {
 
 function updateActiveGamesBySeason() {
     activeGameIds.clear();
-    data.games.forEach(g => { if (g.season === currentSeason) activeGameIds.add(String(g.game_id)); });
+    data.games.forEach(g => { 
+        if (String(g.season) === String(currentSeason)) activeGameIds.add(String(g.game_id)); 
+    });
 }
 
 function handleGameToggle(id, chk, e) {
@@ -123,7 +143,6 @@ function calculateAdvanced(row, isSum = false) {
     const fta = Number(row['FTA'])||0;
     const ast = Number(row['AST'])||0;
     const tov = Number(row['TOV'])||0;
-    const poss = Number(row['poss'])||0;
 
     s['MIN'] = isSum ? (row['MIN'] / row.gp) : Number(row['MIN']);
     if (fga > 0) s['eFG%'] = (((fgm + (Number(row['3PM'])||0)*0.5)/fga)*100).toFixed(1) + "%";
@@ -131,14 +150,9 @@ function calculateAdvanced(row, isSum = false) {
     if (tsDiv > 0) s['TS%'] = ((pts / tsDiv) * 100).toFixed(1) + "%";
     s['AST/TO'] = tov > 0 ? (ast / tov).toFixed(2) : (ast > 0 ? ast.toFixed(2) : "0.00");
     
-    // ORB% ו-DRB% מחושבים כאן ויופיעו רק ב-ADV
     s['ORB%'] = isSum ? (Number(row['ORB%'])/row.gp).toFixed(1) + "%" : (Number(row['ORB%'])||0).toFixed(1) + "%";
     s['DRB%'] = isSum ? (Number(row['DRB%'])/row.gp).toFixed(1) + "%" : (Number(row['DRB%'])||0).toFixed(1) + "%";
 
-    if (poss > 0) {
-        if (row['team scored with'] !== undefined) s['ORtg'] = ((Number(row['team scored with'])/poss)*100).toFixed(1);
-        if (row['opp scored with'] !== undefined) s['DRtg'] = ((Number(row['opp scored with'])/poss)*100).toFixed(1);
-    }
     return s;
 }
 
@@ -148,12 +162,12 @@ function getSortValue(row, key, type) {
         return data.players[row.player_id || row.id]?.Name || "";
     }
     let val;
-    if (isAdvancedMode) {
+    if (isAdvancedMode && type !== 'team') {
         const adv = calculateAdvanced(row.total || row, !!row.total);
-        val = adv[key];
+        val = key === 'starter' ? (row.total ? row.total.starter : row.starter) : adv[key];
     } else {
         val = (row.total ? row.total[key] : row[key]);
-        if (row.total && key !== 'gp') val = val / row.total.gp;
+        if (row.total && !['gp', 'starter'].includes(key)) val = val / row.total.gp;
     }
     if (typeof val === 'string' && val.includes('%')) return parseFloat(val);
     return Number(val) || 0;
@@ -163,14 +177,21 @@ function smartRound(v) {
     if (v === null || v === undefined) return '-';
     if (typeof v === 'string' && v.includes('%')) return v;
     let n = Number(v);
-    return isNaN(n) ? v : Math.round(n * 10) / 10;
+    if (isNaN(n)) return v;
+    return Number.isInteger(n) ? n : Math.round(n * 10) / 10;
 }
 
 function renderAll() { populateGames(); populatePlayers(); populateTeams(); }
 
 function populateGames() {
     const container = document.getElementById('games-container');
-    const filtered = data.games.filter(g => g.season === currentSeason);
+    const filtered = data.games.filter(g => String(g.season) === String(currentSeason));
+    
+    // מיון המשחקים בתוך העונה כרונולוגית (ישן לחדש)
+    filtered.sort((a,b) => getTimestamp(a.date) - getTimestamp(b.date));
+
+    const countEl = document.getElementById('game-count');
+    if (countEl) countEl.innerText = `${filtered.length} משחקים`;
     
     container.innerHTML = filtered.map(g => {
         const isActive = activeGameIds.has(String(g.game_id));
@@ -206,7 +227,11 @@ function populateGames() {
                     <div class="table-wrapper">
                         <table class="box-table">
                             <thead><tr><th class="player-name-cell" onclick="setSort('NAME', '${g.game_id}', event)">שחקן</th>${cols.map(c => `<th onclick="setSort('${c}', '${g.game_id}', event)">${c}</th>`).join('')}</tr></thead>
-                            <tbody>${pStats.map(s => `<tr><td class="player-name-cell">${data.players[s.player_id]?.Name || '???'}</td>${cols.map(c => `<td>${smartRound(isAdvancedMode ? calculateAdvanced(s)[c] : s[c])}</td>`).join('')}</tr>`).join('')}</tbody>
+                            <tbody>${pStats.map(s => {
+                                const pName = data.players[s.player_id]?.Name || '???';
+                                const displayName = Number(s.starter) === 1 ? pName + '*' : pName;
+                                return `<tr><td class="player-name-cell">${displayName}</td>${cols.map(c => `<td>${smartRound(isAdvancedMode ? calculateAdvanced(s)[c] : s[c])}</td>`).join('')}</tr>`;
+                            }).join('')}</tbody>
                         </table>
                     </div>
                 </div>
@@ -222,8 +247,16 @@ function populatePlayers() {
     const pids = [...new Set(filteredStats.map(s => s.player_id))];
     let summaries = pids.map(pid => {
         const ps = filteredStats.filter(s => s.player_id === pid);
-        const total = { gp: ps.length, player_id: pid };
-        Object.keys(ps[0]).forEach(k => { if(!isNaN(ps[0][k])) total[k] = ps.reduce((a,b)=>a+(Number(b[k])||0), 0); });
+        const total = { gp: ps.length, player_id: pid, starter: 0 };
+        
+        ps.forEach(row => {
+            Object.keys(row).forEach(k => {
+                if (!isNaN(row[k])) {
+                    if (total[k] === undefined) total[k] = 0;
+                    total[k] += Number(row[k]);
+                }
+            });
+        });
         return { id: pid, total };
     });
 
@@ -235,12 +268,24 @@ function populatePlayers() {
         });
     }
 
-    const cols = isAdvancedMode ? Object.keys(calculateAdvanced(summaries[0].total, true)) : 
-                 Object.keys(summaries[0].total).filter(k => !ALWAYS_HIDDEN.includes(k) && !['gp','player_id'].includes(k));
+    let cols;
+    if (isAdvancedMode) {
+        cols = ['starter', ...Object.keys(calculateAdvanced(summaries[0].total, true))];
+    } else {
+        cols = Object.keys(summaries[0].total).filter(k => !ALWAYS_HIDDEN.includes(k) && !['gp','player_id','starter'].includes(k));
+    }
 
     container.innerHTML = `<table class="box-table">
         <thead><tr><th class="player-name-cell" onclick="setSort('NAME', 'players', event)">שחקן</th>${cols.map(c => `<th onclick="setSort('${c}', 'players', event)">${c}</th>`).join('')}<th onclick="setSort('gp', 'players', event)">GP</th></tr></thead>
-        <tbody>${summaries.map(p => `<tr><td class="player-name-cell">${data.players[p.id]?.Name}</td>${cols.map(c => `<td>${smartRound(isAdvancedMode ? calculateAdvanced(p.total, true)[c] : p.total[c]/p.total.gp)}</td>`).join('')}<td>${p.total.gp}</td></tr>`).join('')}</tbody>
+        <tbody>${summaries.map(p => `<tr>
+            <td class="player-name-cell">${data.players[p.id]?.Name}</td>
+            ${cols.map(c => {
+                if (c === 'starter') return `<td>${p.total.starter}</td>`;
+                const val = isAdvancedMode ? calculateAdvanced(p.total, true)[c] : p.total[c]/p.total.gp;
+                return `<td>${smartRound(val)}</td>`;
+            }).join('')}
+            <td>${p.total.gp}</td>
+        </tr>`).join('')}</tbody>
     </table>`;
 }
 
@@ -253,7 +298,14 @@ function populateTeams() {
     let summaries = names.map(n => {
         const rows = filteredTeams.filter(t => t["team name"] === n);
         const total = { gp: rows.length };
-        Object.keys(rows[0]).forEach(k => { if(!isNaN(rows[0][k])) total[k] = rows.reduce((a,b)=>a+(Number(b[k])||0), 0); });
+        rows.forEach(row => {
+            Object.keys(row).forEach(k => {
+                if (!isNaN(row[k])) {
+                    if (total[k] === undefined) total[k] = 0;
+                    total[k] += Number(row[k]);
+                }
+            });
+        });
         return { name: n, total };
     });
 
