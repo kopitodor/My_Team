@@ -3,8 +3,14 @@ let activeGameIds = new Set();
 let currentSeason = null;
 let isAdvancedMode = false;
 let sortConfig = { key: null, direction: 'desc', tableId: null };
+let openBoxScores = new Set(); 
 
-const ALWAYS_HIDDEN = ['game_id', 'player_id', 'tech_Fouls', 'reg_FD', 'OFD', 'And1', 'team scored with', 'opp scored with', 'poss', 'ended poss', 'opt_DRB', 'opt_ORB', '%DRB', '%ORB', 'ORB%', 'DRB%'];
+// הוספתי את המדדים האלו לרשימת ההסתרה הכללית
+const ALWAYS_HIDDEN = [
+    'game_id', 'player_id', 'tech_Fouls', 'reg_FD', 'OFD', 'And1', 
+    'team scored with', 'opp scored with', 'poss', 'ended poss', 
+    'opt_DRB', 'opt_ORB', '%DRB', '%ORB', 'ORB%', 'DRB%'
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     const goTo = (id) => {
@@ -22,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
 });
 
+function toggleSidebar() { document.body.classList.toggle('sidebar-closed'); }
+
 async function loadData() {
     try {
         const [gs, pls, ps, ts] = await Promise.all([
@@ -31,34 +39,84 @@ async function loadData() {
             fetch('teams_stats.json').then(r => r.json())
         ]);
         const pMap = {}; pls.forEach(p => pMap[p.player_id] = p);
-        gs.sort((a,b) => new Date(a.date.split('.').reverse().join('-')) - new Date(b.date.split('.').reverse().join('-')));
+        gs.sort((a,b) => parseDate(a.date) - parseDate(b.date));
         data = { games: gs, players: pMap, playersStats: ps, teamStats: ts };
-        if (gs.length > 0) currentSeason = String(gs[gs.length - 1].season);
+        const seasons = getSortedSeasons();
+        if (seasons.length > 0) currentSeason = seasons[seasons.length - 1];
         updateActiveGamesBySeason();
         renderSeasonFilters();
         renderAll();
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Load Error", e); }
+}
+
+function parseDate(d) {
+    if(!d) return new Date(0);
+    const p = d.split('.');
+    return new Date(p[2], p[1]-1, p[0]);
+}
+
+function getSortedSeasons() {
+    const m = {};
+    data.games.forEach(g => {
+        const d = parseDate(g.date);
+        if (!m[g.season] || d < m[g.season]) m[g.season] = d;
+    });
+    return Object.keys(m).sort((a,b) => m[a] - m[b]);
+}
+
+function renderSeasonFilters() {
+    const container = document.getElementById('season-checkboxes');
+    container.innerHTML = getSortedSeasons().map(s => `
+        <div class="season-pill ${s === currentSeason ? 'active' : ''}" onclick="selectSeason('${s}')">${s}</div>
+    `).join('');
+}
+
+function selectSeason(s) { 
+    currentSeason = s; 
+    openBoxScores.clear(); 
+    updateActiveGamesBySeason(); 
+    renderSeasonFilters(); 
+    renderAll(); 
+}
+
+function updateActiveGamesBySeason() {
+    activeGameIds.clear();
+    data.games.forEach(g => { if (g.season === currentSeason) activeGameIds.add(String(g.game_id)); });
+}
+
+function handleGameToggle(id, chk, e) {
+    e.stopPropagation();
+    chk ? activeGameIds.add(String(id)) : activeGameIds.delete(String(id));
+    document.querySelector(`[data-card-id="${id}"]`).style.opacity = chk ? "1" : "0.5";
+    populatePlayers(); populateTeams();
 }
 
 function toggleAdvancedMode() {
     isAdvancedMode = !isAdvancedMode;
-    document.querySelectorAll('.adv-btn').forEach(b => b.classList.toggle('active', isAdvancedMode));
+    document.querySelectorAll('.adv-toggle-btn').forEach(b => b.classList.toggle('active', isAdvancedMode));
     renderAll();
 }
 
-function sortTable(key, tableId) {
+function toggleBoxScore(id) {
+    if (openBoxScores.has(String(id))) openBoxScores.delete(String(id));
+    else openBoxScores.add(String(id));
+    renderAll();
+}
+
+function setSort(key, tableId, e) {
+    if (e) e.stopPropagation(); 
     if (sortConfig.key === key && sortConfig.tableId === tableId) {
         sortConfig.direction = sortConfig.direction === 'desc' ? 'asc' : 'desc';
     } else {
-        sortConfig.key = key; sortConfig.direction = 'desc'; sortConfig.tableId = tableId;
+        sortConfig.key = key;
+        sortConfig.direction = 'desc';
+        sortConfig.tableId = tableId;
     }
     renderAll();
 }
 
-function calculateAdvanced(row, isSummary = false) {
+function calculateAdvanced(row, isSum = false) {
     const s = {};
-    if (isSummary && row.starterSum !== undefined) s['STRT'] = row.starterSum;
-
     const fga = (Number(row['2PA'])||0) + (Number(row['3PA'])||0);
     const fgm = (Number(row['2PM'])||0) + (Number(row['3PM'])||0);
     const pts = Number(row['PTS'])||0;
@@ -67,95 +125,90 @@ function calculateAdvanced(row, isSummary = false) {
     const tov = Number(row['TOV'])||0;
     const poss = Number(row['poss'])||0;
 
-    let rawMin = isSummary ? (row['MIN'] / (row.gp || 1)) : Number(row['MIN']);
-    s['MIN'] = Math.round(rawMin * 10) / 10;
-    
+    s['MIN'] = isSum ? (row['MIN'] / row.gp) : Number(row['MIN']);
     if (fga > 0) s['eFG%'] = (((fgm + (Number(row['3PM'])||0)*0.5)/fga)*100).toFixed(1) + "%";
     const tsDiv = 2 * (fga + 0.44 * fta);
     if (tsDiv > 0) s['TS%'] = ((pts / tsDiv) * 100).toFixed(1) + "%";
     s['AST/TO'] = tov > 0 ? (ast / tov).toFixed(2) : (ast > 0 ? ast.toFixed(2) : "0.00");
+    
+    // ORB% ו-DRB% מחושבים כאן ויופיעו רק ב-ADV
+    s['ORB%'] = isSum ? (Number(row['ORB%'])/row.gp).toFixed(1) + "%" : (Number(row['ORB%'])||0).toFixed(1) + "%";
+    s['DRB%'] = isSum ? (Number(row['DRB%'])/row.gp).toFixed(1) + "%" : (Number(row['DRB%'])||0).toFixed(1) + "%";
 
     if (poss > 0) {
         if (row['team scored with'] !== undefined) s['ORtg'] = ((Number(row['team scored with'])/poss)*100).toFixed(1);
         if (row['opp scored with'] !== undefined) s['DRtg'] = ((Number(row['opp scored with'])/poss)*100).toFixed(1);
     }
-
-    const optORB = Number(row['opt_ORB']) || 0;
-    const optDRB = Number(row['opt_DRB']) || 0;
-    if (optORB > 0) s['ORB%'] = ((Number(row['ORB']) || 0) / optORB * 100).toFixed(1) + "%";
-    if (optDRB > 0) s['DRB%'] = ((Number(row['DRB']) || 0) / optDRB * 100).toFixed(1) + "%";
-
     return s;
 }
 
-function getVal(row, key, isAdv, isSummary = false) {
-    if (key === 'PLAYER_NAME') return data.players[row.player_id]?.Name || "";
-    if (isSummary && key === 'STRT') return row.starterSum || 0;
-
-    let val = isAdv ? calculateAdvanced(row, isSummary)[key] : row[key];
-    
-    if (isSummary && !isAdv && key !== 'gp' && key !== 'STRT') {
-        val = (Number(row[key]) || 0) / (row.gp || 1);
+function getSortValue(row, key, type) {
+    if (key === 'NAME') {
+        if (type === 'team') return row.name;
+        return data.players[row.player_id || row.id]?.Name || "";
     }
-
-    if (String(val).includes('%')) return parseFloat(val);
+    let val;
+    if (isAdvancedMode) {
+        const adv = calculateAdvanced(row.total || row, !!row.total);
+        val = adv[key];
+    } else {
+        val = (row.total ? row.total[key] : row[key]);
+        if (row.total && key !== 'gp') val = val / row.total.gp;
+    }
+    if (typeof val === 'string' && val.includes('%')) return parseFloat(val);
     return Number(val) || 0;
 }
 
-function renderAll() {
-    populateGames(); populatePlayers(); populateTeams();
+function smartRound(v) {
+    if (v === null || v === undefined) return '-';
+    if (typeof v === 'string' && v.includes('%')) return v;
+    let n = Number(v);
+    return isNaN(n) ? v : Math.round(n * 10) / 10;
 }
+
+function renderAll() { populateGames(); populatePlayers(); populateTeams(); }
 
 function populateGames() {
     const container = document.getElementById('games-container');
-    container.innerHTML = data.games.filter(g => String(g.season) === currentSeason).map(g => {
+    const filtered = data.games.filter(g => g.season === currentSeason);
+    
+    container.innerHTML = filtered.map(g => {
         const isActive = activeGameIds.has(String(g.game_id));
+        const isBoxOpen = openBoxScores.has(String(g.game_id));
         let pStats = data.playersStats.filter(s => String(s.game_id) === String(g.game_id));
         const tRows = data.teamStats.filter(t => String(t.game_id) === String(g.game_id));
         const myT = tRows.find(t => t["team name"] !== g.opponent);
-        const oppT = tRows.find(t => t["team name"] === g.opponent);
 
         if (sortConfig.tableId === String(g.game_id)) {
-            pStats.sort((a,b) => {
-                let vA = getVal(a, sortConfig.key, isAdvancedMode, false);
-                let vB = getVal(b, sortConfig.key, isAdvancedMode, false);
-                if (sortConfig.key === 'PLAYER_NAME') return sortConfig.direction === 'desc' ? vB.localeCompare(vA) : vA.localeCompare(vB);
-                return sortConfig.direction === 'desc' ? (vB - vA) : (vA - vB);
+            pStats.sort((a, b) => {
+                const vA = getSortValue(a, sortConfig.key, 'player');
+                const vB = getSortValue(b, sortConfig.key, 'player');
+                return sortConfig.direction === 'desc' ? (vB > vA ? 1 : -1) : (vA > vB ? 1 : -1);
             });
         }
 
-        const cols = isAdvancedMode ? Object.keys(calculateAdvanced(pStats[0]||{}, false)) : 
+        const cols = isAdvancedMode ? Object.keys(calculateAdvanced(pStats[0]||{})) : 
                      Object.keys(pStats[0]||{}).filter(k => !ALWAYS_HIDDEN.includes(k) && k !== 'starter');
 
-        const showStage = g.stage && !["עונה סדירה", "regular season", "Regular Season"].includes(g.stage);
-
         return `
-            <div class="game-card ${!isActive ? 'disabled-game' : ''}" data-card-id="${g.game_id}">
-                <div class="game-card-top-wrapper">
+            <div class="game-card" data-card-id="${g.game_id}" style="opacity: ${isActive ? 1 : 0.5}">
+                <div class="game-card-top-wrapper ${isBoxOpen ? 'has-open-box' : ''}">
                     <div class="game-header" onclick="toggleBoxScore('${g.game_id}')">
-                        <div class="game-info-main">
+                        <div class="game-info">
                             <div class="team-row ${Number(g.O_score) > Number(g.T_score) ? 'winner' : ''}"><span>${g.opponent}</span><span class="score">${g.O_score}</span></div>
                             <div class="team-row ${Number(g.T_score) > Number(g.O_score) ? 'winner' : ''}"><span>${myT ? myT["team name"] : 'הקבוצה שלי'}</span><span class="score">${g.T_score}</span></div>
                         </div>
-                        <div class="game-info-meta">
-                            <span>${g.date}</span>
-                            ${showStage ? `<span class="stage-label">${g.stage}</span>` : ''}
-                        </div>
+                        <div style="font-size:0.85rem; color:#64748b">${g.date}</div>
                     </div>
                     <label class="simple-switch"><input type="checkbox" ${isActive ? 'checked' : ''} onchange="handleGameToggle('${g.game_id}', this.checked, event)"><span class="slider"></span></label>
                 </div>
-                <div id="box-${g.game_id}" class="box-score-container ${sortConfig.tableId === String(g.game_id) ? 'active' : ''}">
-                    <table class="box-table">
-                        <thead><tr><th class="player-name-cell" onclick="sortTable('PLAYER_NAME', '${g.game_id}')">שחקן</th>${cols.map(c => `<th onclick="sortTable('${c}', '${g.game_id}')">${c} ${sortConfig.key===c && sortConfig.tableId===String(g.game_id) ? (sortConfig.direction==='desc'?'▼':'▲'):''}</th>`).join('')}</tr></thead>
-                        <tbody>${pStats.map(s => {
-                            const row = isAdvancedMode ? calculateAdvanced(s, false) : s;
-                            return `<tr><td class="player-name-cell">${data.players[s.player_id]?.Name || '???'}</td>${cols.map(c => `<td>${smartRound(row[c])}</td>`).join('')}</tr>`
-                        }).join('')}</tbody>
-                        <tfoot style="${isAdvancedMode ? 'display:none' : ''}">
-                            ${myT ? `<tr><td class="player-name-cell">${myT["team name"]}</td>${cols.map(c => `<td>${smartRound(myT[c])}</td>`).join('')}</tr>` : ''}
-                            ${oppT ? `<tr><td class="player-name-cell">${oppT["team name"]}</td>${cols.map(c => `<td>${smartRound(oppT[c])}</td>`).join('')}</tr>` : ''}
-                        </tfoot>
-                    </table>
+                <div id="box-${g.game_id}" class="box-score-container ${isBoxOpen ? 'active' : ''}">
+                    <div class="table-wrapper">
+                        <table class="box-table">
+                            <thead><tr><th class="player-name-cell" onclick="setSort('NAME', '${g.game_id}', event)">שחקן</th>${cols.map(c => `<th onclick="setSort('${c}', '${g.game_id}', event)">${c}</th>`).join('')}</tr></thead>
+                            <tbody>${pStats.map(s => `<tr><td class="player-name-cell">${data.players[s.player_id]?.Name || '???'}</td>${cols.map(c => `<td>${smartRound(isAdvancedMode ? calculateAdvanced(s)[c] : s[c])}</td>`).join('')}</tr>`).join('')}</tbody>
+                        </table>
+                    </div>
                 </div>
             </div>`;
     }).join('');
@@ -164,39 +217,38 @@ function populateGames() {
 function populatePlayers() {
     const container = document.getElementById('players-container');
     const filteredStats = data.playersStats.filter(s => activeGameIds.has(String(s.game_id)));
-    if (!filteredStats.length) return;
-    const pids = [...new Set(filteredStats.map(s => String(s.player_id)))];
+    if (!filteredStats.length) { container.innerHTML = "<p style='padding:20px'>אין נתונים</p>"; return; }
+    
+    const pids = [...new Set(filteredStats.map(s => s.player_id))];
     let summaries = pids.map(pid => {
-        const ps = filteredStats.filter(s => String(s.player_id) === pid);
-        const total = { gp: ps.length, starterSum: ps.reduce((a,b) => a + (b.starter ? 1 : 0), 0), player_id: pid };
+        const ps = filteredStats.filter(s => s.player_id === pid);
+        const total = { gp: ps.length, player_id: pid };
         Object.keys(ps[0]).forEach(k => { if(!isNaN(ps[0][k])) total[k] = ps.reduce((a,b)=>a+(Number(b[k])||0), 0); });
         return { id: pid, total };
     });
 
-    if (sortConfig.tableId === 'players-total') {
-        summaries.sort((a,b) => {
-            if (sortConfig.key === 'PLAYER_NAME') return sortConfig.direction === 'desc' ? (data.players[b.id]?.Name||"").localeCompare(data.players[a.id]?.Name||"") : (data.players[a.id]?.Name||"").localeCompare(data.players[b.id]?.Name||"");
-            let vA = getVal(a.total, sortConfig.key, isAdvancedMode, true);
-            let vB = getVal(b.total, sortConfig.key, isAdvancedMode, true);
-            return sortConfig.direction === 'desc' ? (vB - vA) : (vA - vB);
+    if (sortConfig.tableId === 'players') {
+        summaries.sort((a, b) => {
+            const vA = getSortValue(a, sortConfig.key, 'player');
+            const vB = getSortValue(b, sortConfig.key, 'player');
+            return sortConfig.direction === 'desc' ? (vB > vA ? 1 : -1) : (vA > vB ? 1 : -1);
         });
     }
 
-    const first = summaries[0].total;
-    const cols = isAdvancedMode ? Object.keys(calculateAdvanced(first, true)) : 
-                 Object.keys(first).filter(k => !ALWAYS_HIDDEN.includes(k) && !['gp','starter','starterSum','2P%','3P%','FT%'].includes(k));
+    const cols = isAdvancedMode ? Object.keys(calculateAdvanced(summaries[0].total, true)) : 
+                 Object.keys(summaries[0].total).filter(k => !ALWAYS_HIDDEN.includes(k) && !['gp','player_id'].includes(k));
 
-    container.innerHTML = `<table class="box-table"><thead><tr><th class="player-name-cell" onclick="sortTable('PLAYER_NAME', 'players-total')">שחקן</th>${cols.map(c => `<th onclick="sortTable('${c}', 'players-total')">${c} ${sortConfig.key===c && sortConfig.tableId==='players-total' ? (sortConfig.direction==='desc'?'▼':'▲'):''}</th>`).join('')}<th onclick="sortTable('gp', 'players-total')">GP</th></tr></thead>
-        <tbody>${summaries.map(p => {
-            const row = isAdvancedMode ? calculateAdvanced(p.total, true) : p.total;
-            return `<tr><td class="player-name-cell">${data.players[p.id]?.Name}</td>${cols.map(c => `<td>${isAdvancedMode ? row[c] : smartRound(row[c]/p.total.gp)}</td>`).join('')}<td>${p.total.gp}</td></tr>`;
-        }).join('')}</tbody></table>`;
+    container.innerHTML = `<table class="box-table">
+        <thead><tr><th class="player-name-cell" onclick="setSort('NAME', 'players', event)">שחקן</th>${cols.map(c => `<th onclick="setSort('${c}', 'players', event)">${c}</th>`).join('')}<th onclick="setSort('gp', 'players', event)">GP</th></tr></thead>
+        <tbody>${summaries.map(p => `<tr><td class="player-name-cell">${data.players[p.id]?.Name}</td>${cols.map(c => `<td>${smartRound(isAdvancedMode ? calculateAdvanced(p.total, true)[c] : p.total[c]/p.total.gp)}</td>`).join('')}<td>${p.total.gp}</td></tr>`).join('')}</tbody>
+    </table>`;
 }
 
 function populateTeams() {
     const container = document.getElementById('teams-container');
     const filteredTeams = data.teamStats.filter(t => activeGameIds.has(String(t.game_id)));
     if (!filteredTeams.length) return;
+    
     const names = [...new Set(filteredTeams.map(t => t["team name"]))];
     let summaries = names.map(n => {
         const rows = filteredTeams.filter(t => t["team name"] === n);
@@ -204,15 +256,18 @@ function populateTeams() {
         Object.keys(rows[0]).forEach(k => { if(!isNaN(rows[0][k])) total[k] = rows.reduce((a,b)=>a+(Number(b[k])||0), 0); });
         return { name: n, total };
     });
-    if (sortConfig.tableId === 'teams-total') summaries.sort((a,b) => sortConfig.direction === 'desc' ? (b.total[sortConfig.key]||0) - (a.total[sortConfig.key]||0) : (a.total[sortConfig.key]||0) - (b.total[sortConfig.key]||0));
-    const cols = Object.keys(filteredTeams[0]).filter(k => !ALWAYS_HIDDEN.includes(k) && !['team name','game_id','season','date','2P%','3P%','FT%'].includes(k));
-    container.innerHTML = `<table class="box-table"><thead><tr><th class="player-name-cell">קבוצה</th>${cols.map(c => `<th onclick="sortTable('${c}', 'teams-total')">${c}</th>`).join('')}<th>GP</th></tr></thead>
-        <tbody>${summaries.map(s => `<tr><td class="player-name-cell">${s.name}</td>${cols.map(c => `<td>${smartRound(s.total[c]/s.total.gp)}</td>`).join('')}<td>${s.total.gp}</td></tr>`).join('')}</tbody></table>`;
-}
 
-function updateActiveGamesBySeason() { activeGameIds.clear(); data.games.forEach(g => { if (String(g.season) === currentSeason) activeGameIds.add(String(g.game_id)); }); }
-function handleGameToggle(id, chk, e) { e.stopPropagation(); chk ? activeGameIds.add(String(id)) : activeGameIds.delete(String(id)); renderAll(); }
-function selectSeason(s) { currentSeason = String(s); updateActiveGamesBySeason(); renderSeasonFilters(); renderAll(); }
-function renderSeasonFilters() { const c = document.getElementById('season-checkboxes'); const ss = [...new Set(data.games.map(g => String(g.season)))].sort().reverse(); c.innerHTML = ss.map(s => `<div class="season-pill ${s===currentSeason?'active':''}" onclick="selectSeason('${s}')">עונת ${s}</div>`).join(''); }
-function toggleBoxScore(id) { document.getElementById(`box-${id}`).classList.toggle('active'); }
-function smartRound(v) { if (v === null || v === undefined) return '-'; let n = Number(v); if (isNaN(n)) return v; return Math.round(n * 10) / 10; }
+    if (sortConfig.tableId === 'teams') {
+        summaries.sort((a, b) => {
+            const vA = getSortValue(a, sortConfig.key, 'team');
+            const vB = getSortValue(b, sortConfig.key, 'team');
+            return sortConfig.direction === 'desc' ? (vB > vA ? 1 : -1) : (vA > vB ? 1 : -1);
+        });
+    }
+
+    const cols = Object.keys(filteredTeams[0]).filter(k => !ALWAYS_HIDDEN.includes(k) && !['team name','game_id','season','date'].includes(k));
+    container.innerHTML = `<table class="box-table">
+        <thead><tr><th class="player-name-cell" onclick="setSort('NAME', 'teams', event)">קבוצה</th>${cols.map(c => `<th onclick="setSort('${c}', 'teams', event)">${c}</th>`).join('')}<th onclick="setSort('gp', 'teams', event)">GP</th></tr></thead>
+        <tbody>${summaries.map(s => `<tr><td class="player-name-cell">${s.name}</td>${cols.map(c => `<td>${smartRound(s.total[c]/s.total.gp)}</td>`).join('')}<td>${s.total.gp}</td></tr>`).join('')}</tbody>
+    </table>`;
+}

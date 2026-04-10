@@ -9,6 +9,7 @@
 </head>
 <body>
     <nav id="sidebar">
+        <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
         <div class="nav-header">Stats Dashboard</div>
         <button type="button" id="nav-games" class="nav-btn active">משחקים</button>
         <button type="button" id="nav-players" class="nav-btn">שחקנים</button>
@@ -19,13 +20,15 @@
         <section id="sec-games">
             <div class="filters-container">
                 <div class="filter-group">
-                    <strong>בחירת עונה:</strong>
+                    <div class="filter-label">בחירת עונה:</div>
                     <div id="season-checkboxes" class="checkbox-list"></div>
                 </div>
             </div>
             <div class="table-header-row">
                 <h2>רשימת משחקים</h2>
-                <button class="adv-btn" onclick="toggleAdvancedMode()">ADV Mode</button>
+                <button class="adv-toggle-btn" onclick="toggleAdvancedMode()">
+                    <span class="dot"></span> ADV Mode
+                </button>
             </div>
             <div id="games-container"></div>
         </section>
@@ -33,7 +36,9 @@
         <section id="sec-players" style="display:none;">
             <div class="table-header-row">
                 <h2>ממוצעי שחקנים</h2>
-                <button class="adv-btn" onclick="toggleAdvancedMode()">ADV Mode</button>
+                <button class="adv-toggle-btn" onclick="toggleAdvancedMode()">
+                    <span class="dot"></span> ADV Mode
+                </button>
             </div>
             <div class="table-wrapper">
                 <div id="players-container"></div>
@@ -41,7 +46,9 @@
         </section>
 
         <section id="sec-teams" style="display:none;">
-            <h2>סטטיסטיקה קבוצתית (ממוצעים)</h2>
+            <div class="table-header-row">
+                <h2>סטטיסטיקה קבוצתית</h2>
+            </div>
             <div class="table-wrapper">
                 <div id="teams-container"></div>
             </div>
