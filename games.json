@@ -1,0 +1,432 @@
+﻿[
+  {
+    "game_id":20,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"20/07/2023",
+    "opponent":"זכרון שילה",
+    "T_score":70,
+    "O_score":60,
+    "over_times":""
+  },
+  {
+    "game_id":21,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"03/08/2023",
+    "opponent":"אהבת אחים",
+    "T_score":67,
+    "O_score":51,
+    "over_times":""
+  },
+  {
+    "game_id":22,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"10/08/2023",
+    "opponent":"אהבת ישראל",
+    "T_score":53,
+    "O_score":54,
+    "over_times":""
+  },
+  {
+    "game_id":23,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"18/08/2023",
+    "opponent":"קול אביתר",
+    "T_score":67,
+    "O_score":62,
+    "over_times":""
+  },
+  {
+    "game_id":24,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"24/08/2023",
+    "opponent":"היכל זרח",
+    "T_score":61,
+    "O_score":44,
+    "over_times":""
+  },
+  {
+    "game_id":25,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"30/12/2023",
+    "opponent":"קול אביתר",
+    "T_score":53,
+    "O_score":67,
+    "over_times":""
+  },
+  {
+    "game_id":26,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"16/03/2024",
+    "opponent":"היכל מנורה",
+    "T_score":45,
+    "O_score":25,
+    "over_times":""
+  },
+  {
+    "game_id":27,
+    "season":"גבעת שמואל 23/24",
+    "stage":"עונה סדירה",
+    "date":"17/05/2024",
+    "opponent":"בית מתתיהו",
+    "T_score":64,
+    "O_score":57,
+    "over_times":""
+  },
+  {
+    "game_id":15,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"29/03/2025",
+    "opponent":"היכל זרח",
+    "T_score":66,
+    "O_score":61,
+    "over_times":1
+  },
+  {
+    "game_id":28,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"25/04/2025",
+    "opponent":"צעירים בגבעה",
+    "T_score":64,
+    "O_score":46,
+    "over_times":""
+  },
+  {
+    "game_id":29,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"02/05/2025",
+    "opponent":"היכל מנורה",
+    "T_score":60,
+    "O_score":47,
+    "over_times":""
+  },
+  {
+    "game_id":30,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"10/05/2025",
+    "opponent":"בית מתתיהו",
+    "T_score":63,
+    "O_score":55,
+    "over_times":""
+  },
+  {
+    "game_id":31,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"17/05/2025",
+    "opponent":"בית מדרש",
+    "T_score":59,
+    "O_score":53,
+    "over_times":""
+  },
+  {
+    "game_id":32,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"23/05/2025",
+    "opponent":"אבני החושן",
+    "T_score":59,
+    "O_score":50,
+    "over_times":""
+  },
+  {
+    "game_id":33,
+    "season":"גבעת שמואל 25",
+    "stage":"עונה סדירה",
+    "date":"06/06/2025",
+    "opponent":"רמת אילן",
+    "T_score":53,
+    "O_score":31,
+    "over_times":""
+  },
+  {
+    "game_id":16,
+    "season":"פתח תקווה 23",
+    "stage":"עונה סדירה",
+    "date":"02/06/2023",
+    "opponent":"היכל גבריאל 2",
+    "T_score":53,
+    "O_score":37,
+    "over_times":""
+  },
+  {
+    "game_id":17,
+    "season":"פתח תקווה 23",
+    "stage":"עונה סדירה",
+    "date":"21/04/2023",
+    "opponent":"עולמות",
+    "T_score":59,
+    "O_score":42,
+    "over_times":""
+  },
+  {
+    "game_id":18,
+    "season":"פתח תקווה 23",
+    "stage":"עונה סדירה",
+    "date":"16/06/2023",
+    "opponent":"כפר אברהם",
+    "T_score":49,
+    "O_score":42,
+    "over_times":""
+  },
+  {
+    "game_id":19,
+    "season":"פתח תקווה 23",
+    "stage":"גמר",
+    "date":"29/06/2023",
+    "opponent":"היכל גבריאל 1",
+    "T_score":65,
+    "O_score":67,
+    "over_times":2
+  },
+  {
+    "game_id":1,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"31/05/2024",
+    "opponent":"היכל גבריאל 1",
+    "T_score":55,
+    "O_score":69,
+    "over_times":""
+  },
+  {
+    "game_id":2,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"07/06/2024",
+    "opponent":"תפארת הלבנון",
+    "T_score":62,
+    "O_score":50,
+    "over_times":""
+  },
+  {
+    "game_id":3,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"14/06/2024",
+    "opponent":"עולמות",
+    "T_score":40,
+    "O_score":32,
+    "over_times":""
+  },
+  {
+    "game_id":4,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"21/06/2024",
+    "opponent":"קדם אברהם",
+    "T_score":89,
+    "O_score":47,
+    "over_times":""
+  },
+  {
+    "game_id":5,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"28/06/2024",
+    "opponent":"היכל גבריאל 3",
+    "T_score":53,
+    "O_score":40,
+    "over_times":""
+  },
+  {
+    "game_id":6,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"06/07/2024",
+    "opponent":"נחלים",
+    "T_score":41,
+    "O_score":45,
+    "over_times":""
+  },
+  {
+    "game_id":7,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"12/07/2024",
+    "opponent":"היכל גבריאל 2",
+    "T_score":54,
+    "O_score":34,
+    "over_times":""
+  },
+  {
+    "game_id":8,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"19/07/2024",
+    "opponent":"כפר אברהם",
+    "T_score":48,
+    "O_score":26,
+    "over_times":""
+  },
+  {
+    "game_id":9,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"26/07/2024",
+    "opponent":"עמיחי",
+    "T_score":84,
+    "O_score":28,
+    "over_times":""
+  },
+  {
+    "game_id":10,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"02/08/2024",
+    "opponent":"ניגוני חיים",
+    "T_score":41,
+    "O_score":46,
+    "over_times":""
+  },
+  {
+    "game_id":11,
+    "season":"פתח תקווה 24",
+    "stage":"עונה סדירה",
+    "date":"09/08/2024",
+    "opponent":"שירת גנים",
+    "T_score":62,
+    "O_score":50,
+    "over_times":""
+  },
+  {
+    "game_id":12,
+    "season":"פתח תקווה 24",
+    "stage":"רבע גמר - משחק 1",
+    "date":"23/08/2024",
+    "opponent":"עמיחי",
+    "T_score":73,
+    "O_score":59,
+    "over_times":""
+  },
+  {
+    "game_id":13,
+    "season":"פתח תקווה 24",
+    "stage":"רבע גמר - משחק 2",
+    "date":"30/08/2024",
+    "opponent":"עמיחי",
+    "T_score":67,
+    "O_score":61,
+    "over_times":""
+  },
+  {
+    "game_id":14,
+    "season":"פתח תקווה 24",
+    "stage":"חצי גמר",
+    "date":"13/09/2024",
+    "opponent":"ניגוני חיים",
+    "T_score":53,
+    "O_score":43,
+    "over_times":""
+  },
+  {
+    "game_id":34,
+    "season":"פתח תקווה 25",
+    "stage":"עונה סדירה",
+    "date":"26/06/2025",
+    "opponent":"עמיחי",
+    "T_score":69,
+    "O_score":40,
+    "over_times":""
+  },
+  {
+    "game_id":35,
+    "season":"פתח תקווה 25",
+    "stage":"עונה סדירה",
+    "date":"03/07/2025",
+    "opponent":"ניגוני חיים",
+    "T_score":62,
+    "O_score":59,
+    "over_times":""
+  },
+  {
+    "game_id":36,
+    "season":"פתח תקווה 25",
+    "stage":"עונה סדירה",
+    "date":"24/07/2025",
+    "opponent":"היכל גבריאל 1",
+    "T_score":50,
+    "O_score":51,
+    "over_times":""
+  },
+  {
+    "game_id":37,
+    "season":"פתח תקווה 25",
+    "stage":"עונה סדירה",
+    "date":"01/08/2025",
+    "opponent":"היכל גבריאל 2",
+    "T_score":56,
+    "O_score":58,
+    "over_times":""
+  },
+  {
+    "game_id":38,
+    "season":"פתח תקווה 25",
+    "stage":"עונה סדירה",
+    "date":"07/08/2025",
+    "opponent":"ארזי הלבנון",
+    "T_score":71,
+    "O_score":53,
+    "over_times":""
+  },
+  {
+    "game_id":39,
+    "season":"פתח תקווה 25",
+    "stage":"רבע גמר",
+    "date":"15/08/2025",
+    "opponent":"קדם אברהם",
+    "T_score":59,
+    "O_score":44,
+    "over_times":""
+  },
+  {
+    "game_id":40,
+    "season":"פתח תקווה 25",
+    "stage":"גמר",
+    "date":"13/09/2025",
+    "opponent":"ניגוני חיים",
+    "T_score":58,
+    "O_score":48,
+    "over_times":""
+  },
+  {
+    "game_id":41,
+    "season":"פתח תקווה 25/26",
+    "stage":"עונה סדירה",
+    "date":"09/04/2026",
+    "opponent":"גני תקווה",
+    "T_score":59,
+    "O_score":56,
+    "over_times":""
+  },
+  {
+    "game_id":42,
+    "season":"פתח תקווה 25/26",
+    "stage":"עונה סדירה",
+    "date":"14/03/2026",
+    "opponent":"קדם אברהם",
+    "T_score":62,
+    "O_score":57,
+    "over_times":""
+  },
+  {
+    "game_id":43,
+    "season":"פתח תקווה 24",
+    "stage":"גמר",
+    "date":"20/09/2024",
+    "opponent":"היכל גבריאל 1",
+    "T_score":70,
+    "O_score":59,
+    "over_times":""
+  }
+]

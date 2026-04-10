@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="nav-header">Stats Dashboard</div>
+        <button type="button" id="nav-games" class="nav-btn active">משחקים</button>
+        <button type="button" id="nav-players" class="nav-btn">שחקנים</button>
+        <button type="button" id="nav-teams" class="nav-btn">קבוצות</button>
+    </nav>
+
+    <main id="main-content">
+        <section id="sec-games">
+            <div class="filters-container">
+                <div class="filter-group">
+                    <strong>בחירת עונה:</strong>
+                    <div id="season-checkboxes" class="checkbox-list"></div>
+                </div>
+            </div>
+            <div class="table-header-row">
+                <h2>רשימת משחקים</h2>
+                <button class="adv-btn" onclick="toggleAdvancedMode()">ADV Mode</button>
+            </div>
+            <div id="games-container"></div>
+        </section>
+
+        <section id="sec-players" style="display:none;">
+            <div class="table-header-row">
+                <h2>ממוצעי שחקנים</h2>
+                <button class="adv-btn" onclick="toggleAdvancedMode()">ADV Mode</button>
+            </div>
+            <div class="table-wrapper">
+                <div id="players-container"></div>
+            </div>
+        </section>
+
+        <section id="sec-teams" style="display:none;">
+            <h2>סטטיסטיקה קבוצתית (ממוצעים)</h2>
+            <div class="table-wrapper">
+                <div id="teams-container"></div>
+            </div>
+        </section>
+    </main>
+    <script src="dashboard.js"></script>
+</body>
+</html>
