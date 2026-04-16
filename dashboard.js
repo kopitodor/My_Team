@@ -342,30 +342,45 @@ function renderPlayerProfile() {
             </tbody>
 </table></div>`;
 
-    // הגדרת עמודות השיאים - משתמשים באותן עמודות כמו בטבלה למעלה (בסינון אחוזים)
-    const highCols = cols.filter(c => !c.includes('%'));
-    
-    // חישוב שיא קריירה כללי לכל עמודה (כדי לצבוע בכתום)
-    const allHighs = {}; 
-    highCols.forEach(c => {
-        allHighs[c] = Math.max(...pStats.map(st => Number(st[c]) || 0));
+// הגדרה קבועה של עמודות לשיאים - לא משתמשים ב-cols של הכפתורים!
+    const highColsStatic = Object.keys(sampleStat).filter(k => {
+        return !ALWAYS_HIDDEN.includes(k) && 
+               !['gp','player_id','starter','game_id','starter_count'].includes(k) && 
+               (!k.includes('%') || k === 'USG%');
+    });
+
+    // חישוב שיא קריירה אבסולוטי לצורך הצבע הכתום
+    const careerHighs = {};
+    highColsStatic.forEach(c => {
+        careerHighs[c] = Math.max(...pStats.map(st => Number(st[c]) || 0));
     });
 
     html += `<h3 class="profile-table-title">שיאי עונה (במשחק בודד)</h3>
         <div class="table-wrapper"><table class="box-table">
-            <thead><tr><th>עונה</th>${highCols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+            <thead><tr><th>עונה</th>${highColsStatic.map(c => `<th>${c}</th>`).join('')}</tr></thead>
             <tbody>
                 ${seasons.map(s => {
                     const sIds = new Set(data.games.filter(g => g.season === s).map(g => String(g.game_id)));
-                    const st = pStats.filter(st => sIds.has(String(st.game_id)));
-                    return `<tr><td>${s}</td>` + highCols.map(c => {
-                        let max = -1, gid = null; 
-                        st.forEach(x => { 
-                            if(Number(x[c]) > max) { max = Number(x[c]); gid = x.game_id; }
+                    const seasonGames = pStats.filter(st => sIds.has(String(st.game_id)));
+                    
+                    return `<tr><td>${s}</td>` + highColsStatic.map(c => {
+                        let maxVal = -1;
+                        let maxGid = null;
+                        
+                        seasonGames.forEach(g => {
+                            const val = Number(g[c]) || 0;
+                            if(val > maxVal) {
+                                maxVal = val;
+                                maxGid = g.game_id;
+                            }
                         });
-                        const isCH = max === allHighs[c] && max > 0;
-                        return `<td class="clickable-stat ${isCH?'career-high':''}" onclick="jumpToGame('${gid}','${s}')">
-                            ${max < 0 ? 0 : smartRound(max)}
+
+                        const isCareerHigh = maxVal === careerHighs[c] && maxVal > 0;
+                        const classText = isCareerHigh ? 'career-high' : '';
+                        const display = (c === 'USG%') ? maxVal.toFixed(1) : (maxVal < 0 ? 0 : Math.round(maxVal));
+
+                        return `<td class="${classText} clickable-stat" onclick="jumpToGame('${maxGid}','${s}')">
+                            ${display}
                         </td>`;
                     }).join('') + `</tr>`;
                 }).join('')}
@@ -374,6 +389,7 @@ function renderPlayerProfile() {
     
     container.innerHTML = html;
 }
+
 function jumpToGame(gid, s) {
     currentSeason = s; updateActiveGamesBySeason(); renderSeasonFilters();
     goTo('games');

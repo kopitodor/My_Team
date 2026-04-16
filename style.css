@@ -65,7 +65,8 @@ main { flex: 1; padding: 20px; padding-bottom: 100px; overflow-y: auto; scroll-b
 /* Player Profile Specific */
 .player-dropdown { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; font-size: 1rem; }
 .profile-table-title { margin: 25px 0 10px; font-size: 1.2rem; border-right: 4px solid var(--accent); padding-right: 10px; }
-.career-high { font-weight: 900; text-decoration: underline; color: var(--primary); }
+.career-high { font-weight: 900; font-weight: bold; background-color: #fff7ed !important; color: #ea580c !important;}
+.career-high:hover { background-color: #ffedd5 !important; color: #c2410c !important; cursor: pointer;}
 .clickable-stat { cursor: pointer; color: var(--accent); font-weight: 600; }
 .clickable-stat:hover { background: #eff6ff; }
 
