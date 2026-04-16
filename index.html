@@ -4,59 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stats Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav id="sidebar">
-        <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
-        <div class="nav-header">Stats Dashboard</div>
-        <button type="button" id="nav-games" class="nav-btn active">משחקים</button>
-        <button type="button" id="nav-players" class="nav-btn">שחקנים</button>
-        <button type="button" id="nav-teams" class="nav-btn">קבוצות</button>
-    </nav>
 
-    <main id="main-content">
-        <section id="sec-games">
-            <div class="filters-container">
-                <div class="filter-group">
-                    <div class="filter-label">בחירת עונה:</div>
-                    <div id="season-checkboxes" class="checkbox-list"></div>
-                </div>
-            </div>
-            <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="display: flex; align-items: baseline; gap: 10px;">
-                    <h2 style="margin:0;">רשימת משחקים</h2>
-                    <span id="game-count" style="font-size: 0.9rem; color: #64748b; font-weight: 600;"></span>
-                </div>
-                <button class="adv-toggle-btn" onclick="toggleAdvancedMode()">
-                    <span class="dot"></span> ADV Mode
-                </button>
-            </div>
-            <div id="games-container"></div>
-        </section>
+<nav id="sidebar">
+    <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+    <div class="nav-header">לוח בקרה</div>
+    <button id="nav-games" class="nav-btn active">רשימת משחקים</button>
+    <button id="nav-players" class="nav-btn">ממוצעי שחקנים</button>
+    <button id="nav-teams" class="nav-btn">השוואת קבוצות</button>
+    <button id="nav-player-profile" class="nav-btn">שחקן אישי</button>
+</nav>
 
-        <section id="sec-players" style="display:none;">
-            <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin:0;">ממוצעי שחקנים</h2>
-                <button class="adv-toggle-btn" onclick="toggleAdvancedMode()">
-                    <span class="dot"></span> ADV Mode
-                </button>
-            </div>
-            <div class="table-wrapper">
-                <div id="players-container"></div>
-            </div>
-        </section>
+<main>
+    <section id="sec-games">
+        <div class="season-filters-container"></div>
+        <h2 style="margin-bottom:20px;">רשימת משחקים</h2>
+        <div id="games-container"></div>
+    </section>
 
-        <section id="sec-teams" style="display:none;">
-            <div class="table-header-row" style="margin-bottom: 15px;">
-                <h2 style="margin:0;">סטטיסטיקה קבוצתית</h2>
-            </div>
-            <div class="table-wrapper">
-                <div id="teams-container"></div>
-            </div>
-        </section>
-    </main>
-    <script src="dashboard.js"></script>
+    <section id="sec-players" style="display:none;">
+        <div class="season-filters-container"></div>
+        <h2>ממוצעי שחקנים</h2>
+        <div id="players-container"></div>
+    </section>
+
+    <section id="sec-teams" style="display:none;">
+        <div class="season-filters-container"></div>
+        <div id="teams-container"></div>
+    </section>
+
+    <section id="sec-player-profile" style="display:none;">
+        <div class="filters-container">
+            <div class="filter-label">בחר שחקן לצפייה בקריירה:</div>
+            <select id="player-select" class="player-dropdown" onchange="renderPlayerProfile()">
+                <option value="">טוען שחקנים...</option>
+            </select>
+        </div>
+        <div id="profile-content"></div>
+    </section>
+
+</main>
+
+<script src="dashboard.js"></script>
 </body>
 </html>
