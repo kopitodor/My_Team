@@ -409,5 +409,236 @@ input:checked + .slider:before { transform: translateX(16px); }
     background: rgba(255,255,255,0.1);
   }
 
-  main { padding: 10px; }  /*hello */
+  main { padding: 10px; }
 }
+
+@media (max-width: 768px) {
+  .sc-modal-inner {
+    border-radius: 0;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .sc-body {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sc-court-area {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .sc-court-svg {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    aspect-ratio: unset;
+  }
+
+  .sc-badges {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+
+  .sc-badge {
+    padding: 5px 8px;
+    min-width: 56px;
+  }
+  .sc-badge-stats { font-size: 13px; }
+  .sc-badge-pct   { font-size: 11px; }
+  .sc-badge-label { font-size: 9px; }
+
+  .sc-player-panel {
+    width: 100%;
+    min-width: unset;
+    border-left: none;
+    border-top: 1px solid #333;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: visible;
+    padding: 6px;
+    gap: 4px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sc-player-btn { width: auto; padding: 4px 8px; font-size: 0.8rem; }
+  .sc-all-btn { font-size: 0.85rem; padding: 4px 8px; margin-bottom: 0; width: 100%; }
+}
+
+/* =====================================================
+   Shot Chart Modal
+   ===================================================== */
+.sc-modal-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #1a1a1a;
+    color: white;
+    font-family: 'Assistant', sans-serif;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.sc-header {
+    padding: 14px 50px 14px 20px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    background: #111;
+    border-bottom: 1px solid #333;
+    direction: rtl;
+    color: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.sc-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    direction: ltr;
+}
+
+/* Player panel — on the right */
+.sc-player-panel {
+    width: 140px;
+    min-width: 140px;
+    background: #111;
+    border-left: 1px solid #333;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    direction: rtl;
+}
+
+.sc-player-btn {
+    padding: 8px 6px;
+    background: #3d7fe6;
+    color: white;
+    border: 1px solid #2a6acc;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Assistant', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: 0.15s;
+    text-align: center;
+    direction: rtl;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sc-player-btn:hover { background: #5590ee; border-color: #4a7add; }
+.sc-btn-on {
+    background: #3d7fe6;
+    color: white;
+    border-color: #2a6acc;
+}
+.sc-player-btn:not(.sc-btn-on) {
+    background: #1a2a3a;
+    color: #7aabde;
+    border-color: #2a4a6a;
+}
+/* כולם — visually distinct */
+.sc-all-btn {
+    background: #3d7fe6;
+    border: 2px solid #88bbff;
+    color: white;
+    font-size: 1.15rem;
+    font-weight: 800;
+    padding: 10px 6px;
+    margin-bottom: 8px;
+    border-radius: 7px;
+    letter-spacing: 0.03em;
+}
+.sc-all-btn.sc-btn-on {
+    background: #3d7fe6;
+    border-color: #88bbff;
+    color: white;
+}
+.sc-all-btn:not(.sc-btn-on) {
+    background: #1a2a3a;
+    border-color: #3d7fe6;
+    color: #7aabde;
+}
+.sc-all-btn:hover { background: #5590ee; color: white; }
+
+/* Court area */
+.sc-court-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0;
+    overflow: visible;
+    background: #1a1a1a;
+}
+
+.sc-court-svg {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: calc(90vh - 50px);
+    aspect-ratio: 2189 / 1827;
+    display: block;
+    position: relative;
+    z-index: 1;
+    background: #2a2a2a;
+}
+
+.sc-court-svg > path {
+    stroke: #555;
+    stroke-width: 1;
+    fill: #2a2a2a;
+}
+.sc-court-svg g path {
+    fill: white !important;
+    stroke: none !important;
+}
+
+.sc-label {
+    fill: white;
+    font-size: 46px;
+    font-weight: 900;
+    pointer-events: none;
+    stroke: black;
+    stroke-width: 9px;
+    stroke-linejoin: round;
+    paint-order: stroke fill;
+}
+
+/* Summary badges */
+.sc-badges {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+    direction: ltr;
+    pointer-events: none;
+}
+
+.sc-badge {
+    background: rgba(8, 8, 12, 0.88);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 9px;
+    padding: 8px 16px;
+    min-width: 76px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+}
+.sc-badge-label { display: block; font-size: 10px; color: #aaa; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+.sc-badge-stats { display: block; font-size: 17px; font-weight: 800; color: white; line-height: 1.2; }
+.sc-badge-pct   { display: block; font-size: 13px; font-weight: 700; color: #ccc; margin-top: 1px; }
