@@ -14,6 +14,7 @@
     <div class="nav-header">לוח בקרה</div>
     <button id="nav-games" class="nav-btn active">רשימת משחקים</button>
     <button id="nav-players" class="nav-btn">ממוצעי שחקנים</button>
+    <button id="nav-season-shotchart" class="nav-btn">מפת זריקות</button>
     <button id="nav-teams" class="nav-btn">קבוצותי</button>
     <button id="nav-player-profile" class="nav-btn">שחקנים-אישי</button>
 </nav>
@@ -29,6 +30,11 @@
         <div class="season-filters-container"></div>
         <h2>ממוצעי שחקנים</h2>
         <div id="players-container"></div>
+    </section>
+
+    <section id="sec-season-shotchart" class="sec-no-pad" style="display:none;">
+        <div class="season-filters-container" style="padding: 10px 20px; background: var(--bg, #f8fafc);"></div>
+        <div id="season-sc-container"></div>
     </section>
 
     <section id="sec-teams" style="display:none;">
@@ -52,6 +58,14 @@
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal()">&times;</span>
         <div id="rotation-content"></div>
+    </div>
+</div>
+
+<!-- Dedicated shot chart modal -->
+<div id="shot-chart-modal" class="sc-modal-overlay" onclick="if(event.target===this)closeShotChartModal()">
+    <div class="sc-modal-box">
+        <span class="sc-modal-close" onclick="closeShotChartModal()">&times;</span>
+        <div id="shot-chart-content"></div>
     </div>
 </div>
 

@@ -27,10 +27,11 @@ const SEPARATOR_COLS = ['MIN','PTS','2P%','3P%','FT%','TRB','STL','BA','FD','+/-
    Initialisation
    ===================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('nav-games').onclick         = () => goTo('games');
-    document.getElementById('nav-players').onclick       = () => goTo('players');
-    document.getElementById('nav-teams').onclick         = () => goTo('teams');
-    document.getElementById('nav-player-profile').onclick = () => goTo('player-profile');
+    document.getElementById('nav-games').onclick          = () => goTo('games');
+    document.getElementById('nav-players').onclick        = () => goTo('players');
+    document.getElementById('nav-season-shotchart').onclick = () => goTo('season-shotchart');
+    document.getElementById('nav-teams').onclick           = () => goTo('teams');
+    document.getElementById('nav-player-profile').onclick  = () => goTo('player-profile');
     loadData();
 });
 
@@ -43,7 +44,7 @@ function goTo(id) {
     if (currentSection === id) return; // already here — nothing to do
     currentSection = id;
 
-    const pages = ['games','players','teams','player-profile'];
+    const pages = ['games','players','teams','player-profile','season-shotchart'];
     pages.forEach(p => {
         const section = document.getElementById('sec-' + p);
         const btn     = document.getElementById('nav-' + p);
@@ -65,6 +66,7 @@ function renderCurrentSection() {
         case 'players':        populatePlayers(); break;
         case 'teams':          populateTeams();   break;
         case 'player-profile': renderPlayerProfile(); break;
+        case 'season-shotchart': populateSeasonShotChart(); break;
     }
 }
 
@@ -73,6 +75,7 @@ function renderAll() {
     populateGames();
     populatePlayers();
     populateTeams();
+    populateSeasonShotChart();
     if (currentSection === 'player-profile') renderPlayerProfile();
     applyTableSeparators();
 }
@@ -87,7 +90,7 @@ async function loadData() {
             fetch('players.json').then(r => r.json()),
             fetch('players_stats.json').then(r => r.json()),
             fetch('rotations.json').then(r => r.json()),
-            fetch('shot_chart.json').then(r => r.json()).catch(() => []),
+            fetch('shot_charts.json').then(r => r.json()).catch(() => []),
             fetch('teams_stats.json').then(r => r.json()),
         ]);
 
@@ -917,6 +920,7 @@ function openRotationModal(gameId) {
 function closeModal() {
     const modal = document.getElementById('rotation-modal');
     modal.style.display = 'none';
+    modal.querySelector('.modal-content').classList.remove('sc-mode');
     modal.querySelector('.modal-content').style.height = 'auto';
     document.body.style.overflow = 'auto';
 }
@@ -943,14 +947,212 @@ const SC_CONFIG = {
 };
 
 const SC_SUMMARY_GROUPS = {
-    '3PT':   ['sc_right_corner_3','sc_left_corner_3','sc_right_45_3','sc_left_45_3','sc_top_of_the_key'],
-    '2PT':   ['sc_layup','sc_left_floater','sc_right_floater','sc_front_floater','sc_right_corner_mid','sc_left_corner_mid','sc_right_45_mid','sc_left_45_mid','sc_free_throw_line'],
+    'CLOSE': ['sc_layup','sc_left_floater','sc_right_floater','sc_front_floater'],
     'MID':   ['sc_right_corner_mid','sc_left_corner_mid','sc_right_45_mid','sc_left_45_mid','sc_free_throw_line'],
-    'CLOSE': ['sc_layup','sc_left_floater','sc_right_floater','sc_front_floater']
+    '2PT':   ['sc_layup','sc_left_floater','sc_right_floater','sc_front_floater','sc_right_corner_mid','sc_left_corner_mid','sc_right_45_mid','sc_left_45_mid','sc_free_throw_line'],
+    '3PT':   ['sc_right_corner_3','sc_left_corner_3','sc_right_45_3','sc_left_45_3','sc_top_of_the_key'],
 };
 
 // Per-modal state
 let scActivePlayers = new Set();
+
+// Season shot chart state (separate from per-game modal)
+let scSeasonActivePlayers = new Set();
+
+/* =====================================================
+   Season Shot Chart Page
+   ===================================================== */
+function populateSeasonShotChart() {
+    const container = document.getElementById('season-sc-container');
+    if (!container) return;
+
+    // Get all active game IDs for this season
+    const seasonGameIds = data.games
+        .filter(g => String(g.season) === String(currentSeason) && activeGameIds.has(String(g.game_id)))
+        .map(g => String(g.game_id));
+
+    // Collect all shot charts for active season games
+    const seasonCharts = seasonGameIds
+        .map(id => data.shotChartByGame[id])
+        .filter(Boolean);
+
+    if (seasonCharts.length === 0) {
+        container.innerHTML = '<p style="padding:40px; text-align:center; color:#94a3b8;">אין נתוני מפת זריקות לעונה זו</p>';
+        return;
+    }
+
+    // Build unified player list: player_id -> name, from all season players stats
+    const seasonPlayerIds = new Set(
+        data.playersStats
+            .filter(s => seasonGameIds.includes(String(s.game_id)))
+            .map(s => String(s.player_id))
+    );
+
+    // Build a merged shots_data by zone, keyed by player_id (not char)
+    // Each zone value becomes a string of player_id chars we invent
+    // Strategy: assign each player_id a unique single char key
+    const playerIdList = [...seasonPlayerIds];
+    const pidToChar = {};
+    playerIdList.forEach((pid, i) => {
+        // Use base-36 chars starting from 'A'
+        pidToChar[pid] = String.fromCharCode(65 + i); // A, B, C...
+    });
+
+    // Merge all zones across all season charts
+    const ZONES = ['right_corner_3','right_corner_mid','right_45_3','right_45_mid',
+                   'right_floater','layup','left_floater','front_floater',
+                   'free_throw_line','top_of_the_key','left_45_3','left_corner_mid',
+                   'left_45_mid','left_corner_3'];
+
+    const mergedShots = {};
+    ZONES.forEach(zone => mergedShots[zone] = '');
+
+    seasonCharts.forEach(sc => {
+        // Build char->player_id for this game
+        const charToPid = {};
+        Object.entries(sc.player_mapping).forEach(([char, pid]) => {
+            charToPid[char.toUpperCase()] = String(pid);
+        });
+
+        ZONES.forEach(zone => {
+            const shots = sc.shots_data[zone];
+            if (!shots || shots === '0') return;
+            for (const ch of shots) {
+                const pid = charToPid[ch.toUpperCase()];
+                if (!pid || !seasonPlayerIds.has(pid)) continue;
+                const myChar = pidToChar[pid];
+                // Preserve case: uppercase = make, lowercase = miss
+                mergedShots[zone] += (ch === ch.toUpperCase()) ? myChar : myChar.toLowerCase();
+            }
+        });
+    });
+
+    // Build the unified sc object for rendering
+    const unifiedSc = {
+        player_mapping: {},
+        shots_data: mergedShots
+    };
+    playerIdList.forEach(pid => {
+        unifiedSc.player_mapping[pidToChar[pid]] = pid;
+    });
+
+    // Init season active players (all on by default, persist across re-renders)
+    const allChars = new Set(playerIdList.map(pid => pidToChar[pid]));
+    // Keep existing selection if still valid, else reset to all
+    const validExisting = [...scSeasonActivePlayers].filter(c => allChars.has(c));
+    scSeasonActivePlayers = validExisting.length > 0 ? new Set(validExisting) : new Set(allChars);
+
+    // Build player buttons
+    const playerBtns = playerIdList.map(pid => {
+        const char = pidToChar[pid];
+        const name = data.players[pid]?.Name || `#${pid}`;
+        return `<button id="ssc-btn-${char}" class="sc-player-btn ${scSeasonActivePlayers.has(char) ? 'sc-btn-on' : ''}"
+                    onclick="sscTogglePlayer('${char}')">${name}</button>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="ssc-layout">
+            <div class="ssc-court">
+                ${buildCourtSVG('ssc-half-court')}
+                <div class="sc-badges" id="ssc-badges"></div>
+            </div>
+            <div class="ssc-panel">
+                <button id="ssc-btn-all" class="sc-player-btn sc-all-btn ${scSeasonActivePlayers.size === allChars.size ? 'sc-btn-on' : ''}"
+                        onclick="sscToggleAll()">כולם</button>
+                ${playerBtns}
+            </div>
+        </div>`;
+
+    // Store unified sc on window for toggle functions to access
+    window._sscData = unifiedSc;
+    // Use double rAF to ensure SVG is painted before getBBox() is called
+    requestAnimationFrame(() => requestAnimationFrame(() => sscUpdateCourt()));
+}
+
+function sscTogglePlayer(char) {
+    if (scSeasonActivePlayers.has(char)) scSeasonActivePlayers.delete(char);
+    else scSeasonActivePlayers.add(char);
+    sscRenderButtons();
+    sscUpdateCourt();
+}
+
+function sscToggleAll() {
+    const allChars = window._sscAllChars || Object.keys(window._sscData.player_mapping);
+    if (scSeasonActivePlayers.size > 0) scSeasonActivePlayers.clear();
+    else allChars.forEach(c => scSeasonActivePlayers.add(c));
+    sscRenderButtons();
+    sscUpdateCourt();
+}
+
+function sscRenderButtons() {
+    const allChars = Object.keys(window._sscData.player_mapping);
+    const allOn = scSeasonActivePlayers.size === allChars.length;
+    const allBtn = document.getElementById('ssc-btn-all');
+    if (allBtn) allBtn.classList.toggle('sc-btn-on', allOn);
+    allChars.forEach(char => {
+        const btn = document.getElementById('ssc-btn-' + char);
+        if (btn) btn.classList.toggle('sc-btn-on', scSeasonActivePlayers.has(char));
+    });
+}
+
+function sscUpdateCourt() {
+    const sc = window._sscData;
+    if (!sc) return;
+    const svg = document.getElementById('ssc-half-court');
+    if (!svg) return;
+
+    svg.querySelectorAll('.sc-label').forEach(l => l.remove());
+
+    // Temporarily swap scActivePlayers so scCalcZone works
+    const saved = scActivePlayers;
+    scActivePlayers = scSeasonActivePlayers;
+
+    Object.entries(sc.shots_data).forEach(([rawZone, shotString]) => {
+        const zoneId = 'sc_' + rawZone;
+        const zoneEl = svg.querySelector('#' + zoneId);
+        if (!zoneEl) return;
+
+        const { made, total, pct } = scCalcZone(shotString);
+        zoneEl.style.fill = total === 0 ? SC_CONFIG.emptyColor : scGetColor(zoneId, pct);
+
+        const bbox = zoneEl.getBBox();
+        let x = bbox.x + bbox.width / 2;
+        let y = bbox.y + bbox.height / 2;
+        if (rawZone === 'left_corner_3')  x -= 55;
+        else if (rawZone === 'right_corner_3') x += 55;
+        else if (rawZone.includes('3') || rawZone === 'top_of_the_key') y -= 180;
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('class', 'sc-label');
+        label.setAttribute('x', x);
+        label.setAttribute('y', y);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('dominant-baseline', 'central');
+        label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
+        svg.appendChild(label);
+    });
+
+    // Badges
+    const badgesEl = document.getElementById('ssc-badges');
+    if (badgesEl) {
+        badgesEl.innerHTML = Object.entries(SC_SUMMARY_GROUPS).map(([label, zones]) => {
+            let made = 0, total = 0;
+            zones.forEach(zoneId => {
+                const rawZone = zoneId.replace('sc_', '');
+                const { made: m, total: t } = scCalcZone(sc.shots_data[rawZone]);
+                made += m; total += t;
+            });
+            const pct = total > 0 ? Math.round(made / total * 100) : 0;
+            return `<div class="sc-badge">
+                <span class="sc-badge-label">${label}</span>
+                <span class="sc-badge-stats">${made}/${total}</span>
+                <span class="sc-badge-pct">${pct}%</span>
+            </div>`;
+        }).join('');
+    }
+
+    scActivePlayers = saved;
+}
 
 function scGetCategory(zoneId) {
     if (zoneId.includes('3') || zoneId === 'sc_top_of_the_key') return 'threePoint';
@@ -991,7 +1193,7 @@ function scUpdateCourt(sc) {
 
     Object.entries(sc.shots_data).forEach(([rawZone, shotString]) => {
         const zoneId = 'sc_' + rawZone;
-        const el = document.getElementById(zoneId);
+        const el = svg.querySelector('#' + zoneId);
         if (!el) return;
 
         const { made, total, pct } = scCalcZone(shotString);
@@ -1011,7 +1213,7 @@ function scUpdateCourt(sc) {
         label.setAttribute('y', y);
         label.setAttribute('text-anchor', 'middle');
         label.setAttribute('dominant-baseline', 'central');
-        label.innerHTML = `<tspan x="${x}" dy="-15">${made}/${total}</tspan><tspan x="${x}" dy="55">${pct}%</tspan>`;
+        label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
         svg.appendChild(label);
     });
 
@@ -1042,15 +1244,19 @@ function scTogglePlayer(char, sc) {
 }
 
 function scToggleAll(sc) {
-    const allChars = Object.keys(sc.player_mapping);
-    if (scActivePlayers.size === allChars.length) scActivePlayers.clear();
+    const allChars = Object.keys(sc.player_mapping).filter(c =>
+        document.getElementById('sc-btn-' + c) !== null
+    );
+    if (scActivePlayers.size > 0) scActivePlayers.clear();
     else allChars.forEach(c => scActivePlayers.add(c));
     scRenderButtons(sc);
     scUpdateCourt(sc);
 }
 
 function scRenderButtons(sc) {
-    const allChars = Object.keys(sc.player_mapping);
+    const allChars = Object.keys(sc.player_mapping).filter(c =>
+        document.getElementById('sc-btn-' + c) !== null
+    );
     const allOn = scActivePlayers.size === allChars.length;
     const allBtn = document.getElementById('sc-btn-all');
     if (allBtn) allBtn.classList.toggle('sc-btn-on', allOn);
@@ -1064,47 +1270,8 @@ function scGameBtn(gameId) {
     return '<button class="adv-toggle-btn" style="border-color:#f97316;color:#f97316;" onclick="event.stopPropagation();openShotChartModal(' + gameId + ')">🎯 מפת זריקות</button>';
 }
 
-function openShotChartModal(gameId) {
-    const sc = data.shotChartByGame[String(gameId)];
-    if (!sc) {
-        console.error('No shot chart data for game', gameId, '— check that shot_chart.json loaded correctly.');
-        alert('אין נתוני מפת זריקות למשחק זה. ודא שהקובץ shot_chart.json נמצא בתיקייה.');
-        return;
-    }
-
-    // Default all players on
-    scActivePlayers = new Set(Object.keys(sc.player_mapping));
-
-    const modal        = document.getElementById('rotation-modal');
-    const modalContent = modal.querySelector('.modal-content');
-    const content      = document.getElementById('rotation-content');
-
-    const isMobile = window.innerWidth <= 768;
-    modalContent.style.width     = isMobile ? '100vw' : 'auto';
-    modalContent.style.maxWidth  = isMobile ? '100vw' : '95vw';
-    modalContent.style.height    = isMobile ? '100dvh' : 'auto';
-    modalContent.style.maxHeight = isMobile ? '100dvh' : '90vh';
-    modalContent.style.margin    = isMobile ? '0' : '3% auto';
-    modalContent.style.borderRadius = isMobile ? '0' : '15px';
-    modalContent.style.overflow  = 'hidden';
-    modalContent.style.background = '#1a1a1a';
-
-    const game = data.games.find(g => String(g.game_id) === String(gameId));
-    const gameTitle = game ? `${game.opponent}  ${game.T_score}–${game.O_score}  (${game.date})` : '';
-
-    // Player buttons — show real Hebrew names
-    const playerBtns = Object.entries(sc.player_mapping).map(([char, playerId]) => {
-        const name = data.players[playerId]?.Name || `#${playerId}`;
-        return `<button id="sc-btn-${char}" class="sc-player-btn sc-btn-on"
-                        onclick="scTogglePlayer('${char}', data.shotChartByGame['${gameId}'])">${name}</button>`;
-    }).join('');
-
-    content.innerHTML = `
-        <div class="sc-modal-inner">
-            <div class="sc-header">${gameTitle}</div>
-            <div class="sc-body">
-                <div class="sc-court-area">
-                    <svg viewBox="0 0 2189 1827" id="sc-half-court" class="sc-court-svg"><rect width="2189" height="1827" fill="#2a2a2a"/>
+function buildCourtSVG(svgId) {
+    return `<svg viewBox="0 0 2189 1827" id="${svgId}" class="sc-court-svg"><rect width="2189" height="1827" fill="#2a2a2a"/>
                         <path id="sc_right_corner_3" d="m 2092.4471,23.138504 c -14.5423,1.899869 -31.652,-3.083595 -45.0778,3.53923 -3.4087,94.818846 -2.3655,190.228116 -3.5537,285.274166 -0.5066,79.91681 -1.0131,159.83361 -1.5197,239.75045 -33.1041,65.94006 -73.6528,127.6408 -115.5677,188.17883 -8.2524,8.22354 8.0984,11.23571 11.9542,16.08183 74.9612,48.85515 149.3561,98.81413 226.4864,144.18112 9.872,7.544 4.5391,-10.64997 6.0723,-15.23835 3.0857,-287.08578 3.0738,-574.19435 4.4483,-861.291494 -27.3162,-1.152932 -55.5797,-0.195669 -83.2423,-0.475782 z" />
                         <path id="sc_right_corner_mid" d="m 1642.9163,23.609431 c -1.5519,105.327399 0.5034,210.767129 -3.8402,316.020699 -7.8143,51.23243 -26.1916,101.10849 -51.8873,146.10335 -6.6901,11.47947 -14.0872,23.07116 -18.9653,35.21785 109.1183,71.27907 219.1635,141.18578 329.3766,210.75168 5.7068,3.46834 13.801,9.68698 17.8467,0.42724 47.554,-57.62706 85.5435,-122.70393 117.1829,-190.24454 -0.8924,-172.85445 -0.4586,-346.26181 -2.1847,-518.77148 -129.1074,0.330099 -258.7609,-0.659852 -387.5287,0.495201 z" />
                         <path id="sc_right_45_3" d="m 1913.4999,757.63795 c -17.8027,9.64308 -29.5763,28.32779 -44.5268,41.82776 -83.3863,85.93722 -180.9143,158.16153 -288.7248,210.52659 -49.4174,25.2904 -101.7916,43.7786 -153.8027,62.7002 -14.7778,4.9839 -2.0782,21.879 -0.4564,31.3676 79.8545,218.0141 159.9227,435.9515 240.7453,653.5923 5.4545,13.6409 10.4037,27.7176 16.3223,41.0192 113.7266,3.8101 227.6131,1.6309 341.4021,2.0929 50.2951,-0.5743 101.1499,0.698 151.0412,-3.127 -0.1588,-292.3097 0.317,-584.7842 -0.2379,-876.99107 -85.2974,-53.01784 -168.5996,-109.33654 -254.7324,-160.95 -2.2135,-0.98736 -4.5354,-2.17988 -7.0299,-2.05848 z" />
@@ -1122,7 +1289,50 @@ function openShotChartModal(gameId) {
                         <g style="fill:#ffffff; pointer-events:none;">
                         <path d="m 617.65172,476.16055 c 3.85297,9.71608 9.99543,18.61219 14.85932,27.92827 2.84296,5.53676 -0.28952,11.86966 -5.23664,14.92301 -69.01282,44.41723 -137.67958,89.39426 -207.06924,133.23932 -20.58819,13.26544 -41.67445,26.0383 -62.00911,39.51884 0.55923,3.52321 -1.08376,8.87436 0.77276,11.35218 91.45475,-58.72483 182.43401,-118.21977 274.80186,-175.49819 2.75405,-1.21833 5.84633,-5.06307 8.90087,-2.26308 14.88113,10.78132 24.51275,26.97517 37.31528,39.94559 31.93251,35.18995 68.44181,66.21091 108.63559,91.58823 33.92816,21.7641 70.41525,39.21399 107.77057,54.21478 4.84842,2.18125 11.88204,5.87106 9.94052,12.32941 -26.91113,75.9364 -55.15992,151.39071 -83.18017,226.92442 -12.34593,32.28646 -23.84712,64.91827 -37.17708,96.81577 -1.38679,3.5915 -3.72645,7.4769 -8.09044,7.415 -9.59927,0.5874 -18.20198,-5.2847 -27.26616,-7.7621 C 626.94894,1004.1574 507.81586,944.56446 406.43898,861.1015 390.17929,847.77946 374.40686,833.69233 358.5244,820.05491 c -0.71839,4.18127 -0.0298,9.21684 0.20805,13.60819 62.48059,55.20436 130.99614,103.63653 204.46554,143.10849 42.79038,23.03605 86.81013,43.93791 132.56253,60.43601 26.15715,10.0002 52.8017,18.7617 78.80781,29.1123 3.64386,1.304 0.65859,5.8674 0.6112,8.4805 -6.35167,23.6173 -16.11254,46.2461 -24.20504,69.3316 -25.3083,68.7217 -50.91624,137.3373 -76.02827,206.1284 3.00732,1.276 7.82227,0.305 11.20499,-0.088 26.63885,-72.6317 53.81286,-145.0839 80.03847,-217.8589 7.70253,-20.782 15.71565,-41.8529 25.19534,-61.663 43.22785,10.0627 86.24089,21.2798 130.04793,28.677 78.67735,14.0679 158.90615,15.144 238.60585,15.0753 65.8655,-0.1614 131.2326,-10.4582 195.6447,-23.4753 15.0216,-2.7345 29.8071,-6.7044 44.7878,-9.5264 2.6253,-0.4427 5.8733,0.1984 6.2217,3.384 17.4716,44.5674 33.5421,89.6955 50.4119,134.5038 16.2368,43.7291 32.4145,87.4799 48.5521,131.2458 2.6381,-0.2446 11.1293,2.3203 10.1976,-1.7061 -31.481,-86.2758 -63.4737,-172.3701 -94.5532,-258.7897 -1.8439,-4.8732 -3.4725,-12.4017 2.0385,-15.6053 30.8564,-12.3642 62.5209,-22.8616 93.2731,-35.5905 37.5814,-14.9257 73.5471,-33.5563 109.2504,-52.44992 74.1408,-41.08153 143.0362,-91.65498 204.9493,-149.43271 -0.1041,-4.86894 0.3716,-9.87381 -0.086,-14.65976 -6.5372,4.93524 -12.4089,11.69515 -18.707,17.32035 -85.2427,82.20222 -188.6873,143.61644 -297.423,189.37954 -29.6802,12.1712 -59.607,24.1838 -90.4406,33.0259 -5.4986,1.8451 -13.6187,0.8305 -15.2188,-5.8167 -37.3576,-97.47793 -73.9797,-195.2616 -108.5166,-293.77532 -4.4423,-12.69637 -8.7865,-25.42687 -13.1283,-38.158 4.4805,-6.45891 12.9415,-8.01048 19.5539,-11.43003 38.7895,-15.02153 76.6433,-32.73803 111.8174,-55.04416 41.7055,-25.85251 78.92,-58.46774 112.1623,-94.43758 10.1485,-10.97052 19.7661,-22.70505 31.8994,-31.5503 2.5914,-1.47054 4.8468,2.37141 7.2976,3.03361 87.2569,54.42979 173.7307,110.13589 260.1404,165.9117 1.8898,-2.33776 0.1789,-7.62186 0.7714,-11.00261 -28.0467,-18.46377 -56.8547,-36.20573 -85.1535,-54.45613 -58.7034,-37.60541 -117.5539,-75.05932 -175.7008,-113.47578 -3.2503,-1.35589 0.401,-4.74712 0.8425,-6.82095 6.2705,-12.92014 14.392,-24.93126 20.6775,-37.78535 -1.1548,-2.47819 -5.2457,-0.68694 -7.402,-1.26953 -5.0067,-1.30477 -5.2902,5.41186 -7.8097,8.22719 -29.7762,51.23722 -71.722,94.19408 -115.975,133.07062 -5.2467,3.63979 -9.8343,10.34371 -16.8446,10.02692 -5.0632,-1.32326 -7.1333,-7.24684 -10.9277,-10.36451 -40.3031,-46.52731 -80.092,-93.50098 -119.5764,-140.72528 -3.5993,0.0735 -8.6983,-1.05865 -11.6154,0.42884 31.9469,37.82733 63.7911,75.76596 95.6421,113.6809 11.8374,14.89186 26.3772,27.95422 34.3412,45.56814 -8.0317,11.10255 -21.9235,15.08819 -32.8575,22.58001 -48.0335,31.03338 -102.9083,49.9237 -158.3354,62.87989 -37.236,8.57604 -75.1602,14.50623 -113.4483,14.83946 -33.9105,0.24672 -68.073,1.64385 -101.6709,-3.74373 -71.08226,-9.16065 -140.5622,-31.35066 -203.09456,-66.492 -15.10816,-8.21169 -29.4851,-17.66719 -44.60435,-25.85875 -4.53892,-2.81922 -9.27586,-6.41676 -11.68053,-11.28991 14.01008,-19.98034 30.06039,-38.50907 45.4191,-57.48088 26.49915,-31.81099 53.53752,-63.34647 80.15975,-94.9577 -3.60058,-0.81213 -8.07682,-0.34932 -11.89282,-0.21229 -29.97766,35.56194 -60.25318,70.87758 -90.29052,106.38389 -10.60618,12.60668 -20.28445,26.38058 -33.07905,36.85659 -3.08625,1.73453 -5.86719,-2.41051 -8.51306,-3.50204 -27.19098,-19.72137 -49.69768,-45.08273 -71.29397,-70.61579 -17.87999,-21.57859 -33.75806,-44.74445 -47.67684,-69.05472 -3.44495,-0.42788 -7.4536,-0.36442 -10.92193,-0.034 z m 305.01019,247.18637 c 34.24001,4.06183 67.33719,14.83222 101.66449,18.45663 40.0763,4.37093 80.5226,4.06241 120.7571,2.56102 32.659,-1.29611 65.0148,-6.39753 96.9434,-13.16339 11.2385,-1.82906 22.7851,-4.54019 34.1874,-3.11581 9.0418,23.3078 17.2962,47.10421 26.073,70.58394 32.1932,88.14637 65.2406,176.002 95.5355,264.81959 0.3332,2.114 3.0727,5.9532 -0.7016,6.2815 -26.0559,8.3942 -53.1976,12.7501 -79.9004,18.5662 -46.6357,9.1996 -94.1277,13.7179 -141.6103,15.5784 -42.2564,0.5987 -84.5461,1.2938 -126.7937,-0.012 -75.3325,-4.1352 -149.97638,-17.2162 -223.21247,-34.9765 -8.27137,-2.6167 -16.76522,-4.3762 -25.09906,-6.7552 -3.43473,-0.6494 -4.7651,-4.2483 -3.39533,-7.2521 9.88211,-31.1741 21.34523,-61.84024 32.2904,-92.65541 28.1055,-77.09498 56.94939,-154.04728 85.95151,-230.72971 1.65582,-3.03398 3.18221,-8.08715 7.31006,-8.18756 z M -517.95945,-43.650794 c 0,638.095234 0,1276.190494 0,1914.285694 67.47771,1.1648 135.85144,0.1664 203.67374,0.4992 1006.8783,0 2013.75671,0 3020.63491,0 1.1648,-67.4778 0.1664,-135.8516 0.4992,-203.6738 0,-570.3703 0,-1140.74073 0,-1711.111094 -67.4778,-1.164739 -135.8516,-0.166303 -203.6738,-0.499132 -1006.8783,0 -2013.75662,0 -3020.63492,0 z M 1278.1343,141.58606 c -0.7973,39.98213 0.056,80.3157 -1.7703,120.0787 -14.57,39.059 -40.5102,74.78821 -77.2719,95.46941 -28.121,16.99264 -60.2705,27.92708 -93.3997,26.89569 -30.6164,1.53136 -61.7862,-1.66599 -89.9422,-14.39916 -38.61252,-14.68097 -69.65334,-45.0483 -88.42506,-81.46105 -6.12579,-13.1247 -14.35976,-26.32398 -16.14338,-40.65276 0.86175,-74.05913 0.40356,-148.155271 2.70092,-222.185169 121.77562,-2.106504 243.59082,-1.340142 365.38322,-1.965526 -0.3772,39.406622 -0.7545,78.813245 -1.1316,118.219865 z M 739.43762,23.90563 c 54.1584,0.134341 108.31681,0.268684 162.47521,0.403026 4.95696,77.295444 2.09876,154.894674 6.52592,232.201754 3.58017,34.83132 28.65398,62.39421 51.67592,86.72015 3.46738,7.05711 20.68023,13.57639 13.882,21.03519 -30.13426,36.89842 -61.87626,72.63369 -91.35157,109.9685 2.16434,3.94242 9.44628,0.18005 11.56684,-2.75917 30.86957,-32.62881 55.38877,-71.47224 90.46996,-99.9411 10.3108,-4.56079 21.4003,3.70665 31.4268,6.06332 18.1163,7.69808 37.0705,14.84345 57.1427,13.27881 29.6343,-1.31262 60.9803,4.64772 88.9978,-7.96219 14.1122,-4.37792 27.8394,-12.17486 42.6832,-13.19046 12.0605,5.22121 18.5113,18.46695 28,27.02213 23.2862,25.09071 44.2771,52.30593 68.1651,76.79422 1.3814,3.30808 11.6395,3.2397 7.4808,-1.29279 -30.7502,-37.5285 -62.2962,-74.40062 -93.4834,-111.56683 26.9927,-29.03622 59.5286,-58.80086 66.093,-99.91009 7.964,-78.83702 2.6707,-158.24233 7.084,-237.255095 115.3843,0 230.7684,0 346.1527,0 -1.134,97.448535 -0.091,194.943015 -2.9333,292.360095 -2.1486,44.11757 -17.7437,86.39403 -34.3869,126.86423 -4.335,11.10551 -11.1015,22.22251 -14.2174,33.15662 11.0513,3.17291 13.8668,-10.01863 17.947,-16.99528 16.9606,-36.68743 31.2703,-75.34732 36.552,-115.58634 6.1738,-87.66316 3.517,-175.65649 4.5627,-263.46872 0.6692,-18.756623 -0.8103,-37.710604 1.7486,-56.330605 129.0095,0 258.0192,0 387.0287,0 0.9781,173.235565 2.315,346.471505 2.1081,519.711055 -33.2584,66.96065 -69.6157,133.37429 -118.5917,190.27159 -7.7,8.34049 -17.4537,-3.27024 -24.5732,-6.44295 -19.3078,-11.53392 -37.9597,-24.68826 -57.3744,-35.75076 -4.3361,6.20112 3.6447,12.41179 8.4884,15.28708 19.2147,14.11995 41.053,25.0336 58.6401,41.17374 -1.6687,10.02653 -12.355,16.06097 -18.1703,23.75673 -15.9827,17.46113 -34.643,32.69414 -48.8993,51.61529 -1.9989,4.14174 -1.2205,16.42346 3.8917,8.20651 24.6251,-23.63364 46.8373,-50.04416 73.4706,-71.46605 8.6402,-6.20164 16.9627,4.85824 24.6465,7.78149 81.2394,49.67773 160.8129,102.0273 241.3288,152.87389 0,292.59568 0,585.19138 0,877.78708 -90.425,3.29 -180.9535,1.5586 -271.4223,2.0924 -70.4134,-0.4335 -140.8819,0.5487 -211.2598,-1.5181 -11.3273,2.5317 -13.6705,-7.0745 -16.704,-15.7497 -52.8157,-139.0957 -103.076,-279.1574 -155.5231,-418.385 -1.918,-5.1126 -6.0594,-17.5153 -13.1618,-12.2853 17.5705,51.7785 37.643,103.0093 56.2421,154.5483 32.1695,88.2526 65.6939,176.0429 96.8135,264.6575 2.4314,8.854 5.8552,17.6589 6.3938,26.86 -218.2456,1.737 -436.5137,0.8327 -654.7681,0.9365 -163.23938,-0.4061 -326.49563,0.1096 -489.72285,-1.6247 5.29342,-24.2718 15.94428,-47.3314 23.66173,-70.9835 45.14825,-125.3029 92.80849,-249.8075 138.33293,-374.9119 -6.10312,-3.7751 -10.73306,2.9466 -12.09771,8.3232 -36.69408,94.3931 -70.57586,189.8771 -106.25246,284.666 -19.23168,51.7879 -38.48957,103.5662 -57.73489,155.349 -164.62298,-0.1295 -329.24208,1.2343 -493.86162,2.1083 0.797238,-290.7836 0.307619,-581.576 2.52046,-872.35248 -1.99946,-10.30911 7.110127,-13.85124 14.442572,-18.39079 71.363648,-45.3383 142.612348,-90.87133 213.712338,-136.59754 10.78193,-6.11864 21.03782,-13.96454 32.69579,-18.16084 22.73127,18.4043 41.93981,41.1367 64.0067,60.47557 4.79841,2.63194 8.7949,11.30236 14.71354,10.57478 2.9869,-9.08605 -8.539,-15.00457 -12.9045,-21.3898 -17.15334,-18.13716 -35.81974,-35.37616 -50.34265,-55.67184 2.48165,-9.40866 13.97588,-13.27374 20.77062,-19.25178 13.86603,-10.41458 30.62508,-17.57606 42.64703,-30.17468 2.6444,-4.0794 -1.01217,-10.6184 -5.37263,-5.08433 -22.98946,13.16982 -44.47903,29.66611 -68.65079,40.38628 -13.57069,-8.24403 -21.86992,-23.34938 -32.02505,-35.28336 -36.75029,-48.31862 -65.62948,-101.91924 -93.19818,-155.83457 0,-174.0441 0,-348.08821 0,-522.132315 135.64713,0 271.29424,0 406.94135,0 0.74605,101.699485 1.27799,203.481215 2.91683,305.123265 8.78,50.31394 25.3003,99.2981 49.42073,144.3156 2.26609,4.73754 14.53624,4.38172 8.23898,-2.06441 -27.827,-53.60916 -46.12816,-112.65181 -47.88433,-173.26732 -3.73754,-80.25271 -2.96443,-160.66636 -2.25456,-240.983597 0.0886,-11.074556 1.02631,-22.109381 1.93835,-33.139038 54.15943,0.135374 108.31886,0.270749 162.47829,0.406125 z M 82.61098,23.515005 c 21.50299,0 43.00596,0 64.50894,0 0.0372,174.159705 -0.0744,348.337025 0.0558,522.485745 33.75724,67.1765 73.2411,131.4266 118.56089,191.42174 3.11902,4.05061 7.31043,10.96235 0.002,13.19284 -80.79617,54.10584 -162.8995,106.34007 -245.894245,157.00496 -5.774968,0.63576 -2.173968,-9.02605 -3.345111,-11.92956 C 15.129111,616.32127 15.354159,336.94162 16.390143,57.570973 17.064048,46.246825 15.283302,34.628437 18.009048,23.515005 c 21.533984,0 43.067968,0 64.601932,0 z m 2093.08032,0 c -0.2453,279.595295 -1.5757,559.193725 -4.0737,838.777285 -1.2208,12.97557 0.9127,27.03106 -2.7652,39.40973 -19.5746,-8.13843 -36.7207,-21.96234 -55.2207,-32.44561 -61.8301,-39.07679 -123.7622,-78.11712 -183.9722,-119.64703 -3.966,-2.34073 -8.5043,-6.95882 -2.7166,-10.74386 41.0925,-60.39063 81.352,-121.568 114.8292,-186.58068 1.5889,-175.32235 1.6493,-350.66814 5.1246,-525.967256 14.6668,-4.293844 30.6428,-1.492798 45.7806,-2.699243 27.6706,-0.199643 55.3429,-0.06282 83.014,-0.103336 z" />
                     </g>
-                    </svg>
+                    </svg>`;
+}
+
+
+function openShotChartModal(gameId) {
+    const sc = data.shotChartByGame[String(gameId)];
+    if (!sc) {
+        console.error('No shot chart data for game', gameId, '— check that shot_charts.json loaded correctly.');
+        alert('אין נתוני מפת זריקות למשחק זה. ודא שהקובץ shot_charts.json נמצא בתיקייה.');
+        return;
+    }
+
+    const boxScorePlayerIds = new Set(
+        data.playersStats
+            .filter(s => String(s.game_id) === String(gameId))
+            .map(s => String(s.player_id))
+    );
+
+    scActivePlayers = new Set(
+        Object.entries(sc.player_mapping)
+            .filter(([char, playerId]) => boxScorePlayerIds.has(String(playerId)))
+            .map(([char]) => char)
+    );
+
+    const modal   = document.getElementById('shot-chart-modal');
+    const content = document.getElementById('shot-chart-content');
+
+    const game = data.games.find(g => String(g.game_id) === String(gameId));
+    const gameTitle = game ? `${game.opponent}  ${game.T_score}–${game.O_score}  (${game.date})` : '';
+
+    // Only show players who appear in the box score for this game
+    const playerBtns = Object.entries(sc.player_mapping)
+        .filter(([char, playerId]) => boxScorePlayerIds.has(String(playerId)))
+        .map(([char, playerId]) => {
+            const name = data.players[playerId]?.Name || `#${playerId}`;
+            return `<button id="sc-btn-${char}" class="sc-player-btn sc-btn-on"
+                        onclick="scTogglePlayer('${char}', data.shotChartByGame['${gameId}'])">${name}</button>`;
+        }).join('');
+
+    content.innerHTML = `
+        <div class="sc-modal-inner">
+            <div class="sc-body">
+                <div class="sc-court-area">
+                    ${buildCourtSVG('sc-half-court')}
                     <div class="sc-badges" id="sc-badges"></div>
                 </div>
                 <div class="sc-player-panel">
@@ -1133,9 +1343,17 @@ function openShotChartModal(gameId) {
             </div>
         </div>`;
 
-    modal.style.display = 'block';
+    modal.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    // Paint zones after DOM settles
     requestAnimationFrame(() => scUpdateCourt(sc));
+}
+
+function closeShotChartModal() {
+    const modal = document.getElementById('shot-chart-modal');
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+
+    // Also close on backdrop click
+    modal.onclick = null;
 }

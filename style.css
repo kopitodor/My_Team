@@ -476,6 +476,30 @@ input:checked + .slider:before { transform: translateX(16px); }
 /* =====================================================
    Shot Chart Modal
    ===================================================== */
+
+/* Shot chart modal sizing — added via JS class, overrides default .modal-content */
+.modal-content.sc-mode {
+    width: auto;
+    max-width: 95vw;
+    height: auto;
+    max-height: 90vh;
+    margin: 3% auto;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #1a1a1a;
+}
+
+@media (max-width: 768px) {
+    .modal-content.sc-mode {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        margin: 0;
+        border-radius: 0;
+    }
+}
+
 .sc-modal-inner {
     display: flex;
     flex-direction: column;
@@ -585,9 +609,9 @@ input:checked + .slider:before { transform: translateX(16px); }
 
 .sc-court-svg {
     width: auto;
-    height: auto;
+    height: 100vh;
     max-width: 100%;
-    max-height: calc(90vh - 50px);
+    max-height: 100vh;
     aspect-ratio: 2189 / 1827;
     display: block;
     position: relative;
@@ -607,11 +631,11 @@ input:checked + .slider:before { transform: translateX(16px); }
 
 .sc-label {
     fill: white;
-    font-size: 46px;
+    font-size: 90px;
     font-weight: 900;
     pointer-events: none;
     stroke: black;
-    stroke-width: 9px;
+    stroke-width: 12px;
     stroke-linejoin: round;
     paint-order: stroke fill;
 }
@@ -634,11 +658,111 @@ input:checked + .slider:before { transform: translateX(16px); }
     backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 9px;
-    padding: 8px 16px;
-    min-width: 76px;
+    padding: 18px 30px;
+    min-width: 130px;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.6);
 }
-.sc-badge-label { display: block; font-size: 10px; color: #aaa; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
-.sc-badge-stats { display: block; font-size: 17px; font-weight: 800; color: white; line-height: 1.2; }
-.sc-badge-pct   { display: block; font-size: 13px; font-weight: 700; color: #ccc; margin-top: 1px; }
+.sc-badge-label { display: block; font-size: 16px; color: #aaa; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.sc-badge-stats { display: block; font-size: 36px; font-weight: 800; color: white; line-height: 1.2; }
+.sc-badge-pct   { display: block; font-size: 22px; font-weight: 700; color: #ccc; margin-top: 2px; }
+/* =====================================================
+   Dedicated Shot Chart Modal
+   ===================================================== */
+.sc-modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+}
+
+.sc-modal-overlay.open {
+    display: flex;
+}
+
+.sc-modal-box {
+    position: relative;
+    background: #1a1a1a;
+    border-radius: 15px;
+    overflow: hidden;
+    width: auto;
+    height: 100vh;
+    max-height: 100vh;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.4);
+}
+
+.sc-modal-close {
+    position: absolute;
+    left: 14px;
+    top: 10px;
+    font-size: 38px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #94a3b8;
+    z-index: 10;
+    line-height: 1;
+}
+.sc-modal-close:hover { color: white; }
+
+@media (max-width: 768px) {
+    .sc-modal-box {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+}
+
+/* =====================================================
+   Season Shot Chart Page
+   ===================================================== */
+
+/* Remove main padding for this section */
+.sec-no-pad { margin: -20px; }
+
+#season-sc-container { height: 100%; }
+
+.ssc-layout {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 110px);
+    direction: ltr;
+    overflow: hidden;
+    background: #1a1a1a;
+}
+
+/* Court: fills remaining space */
+.ssc-court {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.ssc-court .sc-court-svg {
+    height: 100%;
+    width: auto;
+    display: block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Player panel: right side, scrolls only when needed */
+.ssc-panel {
+    width: 150px;
+    flex-shrink: 0;
+    background: #111;
+    border-left: 1px solid #333;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    direction: rtl;
+}
