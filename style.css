@@ -67,7 +67,7 @@ main { flex: 1; padding: 20px; padding-bottom: 100px; overflow-y: auto; scroll-b
    ===================================================== */
 .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: white; margin-bottom: 30px; }
 .table-wrapper.width-fit { width: fit-content; max-width: 100%; }
-.box-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.box-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 0.9rem; }
 .width-fit .box-table { width: auto; }
 .box-table th { background: #f8fafc; padding: 12px 10px; border-bottom: 2px solid var(--border); cursor: pointer; user-select: none; position: sticky; top: 0; }
 .box-table td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; }
@@ -79,6 +79,10 @@ main { flex: 1; padding: 20px; padding-bottom: 100px; overflow-y: auto; scroll-b
   border-left: 3px solid #64748b;
   white-space: nowrap;
   padding: 10px 15px !important;
+}
+th.player-name-cell {
+  background: #f8fafc !important;
+  z-index: 20;
 }
 
 /* Column separator lines (only when .show-separators is present) */
@@ -182,6 +186,9 @@ body.mode-adv .player-name-cell {
   color: white;
   background: #94a3b8;
   width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
   margin-top: 4px;
 }
 .stage-badge.stage-gold { background: #d97706; }
@@ -226,7 +233,8 @@ input:checked + .slider:before { transform: translateX(16px); }
   width: 96vw;
   max-width: 1750px;
   max-height: 90vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
 }
@@ -525,7 +533,7 @@ input:checked + .slider:before { transform: translateX(16px); }
 .sc-body {
     display: flex;
     flex: 1;
-    overflow: visible;
+    overflow: hidden;
     direction: ltr;
     min-height: 0;
 }
@@ -734,6 +742,94 @@ input:checked + .slider:before { transform: translateX(16px); }
     }
 }
 
+/* Portrait mobile: panel on top, SVG below */
+@media (max-width: 768px) and (orientation: portrait) {
+    .sc-modal-inner { flex-direction: column; }
+    .sc-body { flex-direction: column; }
+    .sc-player-panel {
+        width: 100%;
+        min-width: unset;
+        max-height: 160px;
+        flex-direction: row;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        border-left: none;
+        border-bottom: 1px solid #333;
+        border-radius: 0;
+        padding: 8px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        direction: rtl;
+        align-content: flex-start;
+    }
+    .sc-player-btn {
+        flex-shrink: 0;
+        width: auto;
+        padding: 8px 14px;
+        white-space: nowrap;
+    }
+    .sc-all-btn {
+        flex-shrink: 0;
+        width: auto;
+        padding: 8px 14px;
+        white-space: nowrap;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    .sc-court-area { flex: 1; min-height: 0; }
+    .sc-court-svg { height: 100%; max-height: 100%; }
+    .sc-badges { top: 8px; right: 4px; left: auto; }
+    .sc-badge { padding: 3px 6px; min-width: 50px; }
+    .sc-badge-label { font-size: 9px; }
+    .sc-badge-stats { font-size: 13px; }
+    .sc-badge-pct   { font-size: 11px; }
+}
+
+/* Landscape mobile: panel on right as vertical scrollable list */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sc-modal-inner { height: 100dvh; }
+    .sc-body { flex-direction: row; overflow: hidden; }
+    .sc-player-panel {
+        width: 100px;
+        min-width: 100px;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        border-left: 1px solid #333;
+        border-bottom: none;
+        padding: 8px 4px;
+        gap: 4px;
+        justify-content: flex-start;
+        align-items: stretch;
+    }
+    .sc-player-btn,
+    .sc-all-btn {
+        font-size: 0.8rem;
+        padding: 8px 4px;
+        width: 100% !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-bottom: 0;
+        display: block;
+    }
+    .sc-court-area { flex: 1; min-width: 0; overflow: hidden; }
+    .sc-court-svg { height: 100%; max-height: 100%; }
+    .sc-badges { top: 4px; left: 4px; right: auto; gap: 3px; }
+    .sc-badge {
+        padding: 3px 8px !important;
+        min-width: 70px !important;
+        max-width: 70px !important;
+        border-radius: 5px;
+    }
+    .sc-badge-label { font-size: 9px !important; margin-bottom: 1px; }
+    .sc-badge-stats { font-size: 14px !important; line-height: 1.1; }
+    .sc-badge-pct   { font-size: 11px !important; margin-top: 0; }
+}
+
 /* =====================================================
    Player Profile Shot Chart
    ===================================================== */
@@ -817,4 +913,222 @@ input:checked + .slider:before { transform: translateX(16px); }
     gap: 6px;
     overflow-y: auto;
     direction: rtl;
+}
+/* =====================================================
+   Mobile (max-width: 600px)
+   ===================================================== */
+@media (max-width: 600px) {
+
+  /* Sidebar: collapse to a horizontal scrollable top bar */
+  body {
+    flex-direction: column;
+    overflow: auto;
+  }
+
+  nav {
+    width: 100% !important;
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+
+  .sidebar-toggle { display: none; }
+  .nav-header { display: none; }
+
+  .nav-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: auto;
+    padding: 12px 16px;
+    text-align: center;
+    border-left: none !important;
+    border-bottom: 3px solid transparent;
+    font-size: 0.9rem;
+  }
+  .nav-btn.active {
+    background: var(--accent);
+    color: white;
+    border-bottom: 3px solid white;
+    border-left: none;
+  }
+
+  main {
+    padding: 12px;
+    overflow-y: auto;
+    height: calc(100vh - 50px);
+  }
+
+  /* Game cards: tighten layout so score sits close to team name */
+  .game-header {
+    gap: 10px;
+  }
+
+  .game-date-area {
+    font-size: 0.85rem;
+    gap: 2px;
+    min-width: 60px;
+  }
+
+  .team-row {
+    width: auto;
+    min-width: 120px;
+    font-size: 1rem;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  /* Team name takes available space, score stays right next to it */
+  .team-row span:first-child {
+    flex: 1;
+  }
+  .team-row span:last-child {
+    font-weight: 800;
+    margin-right: 6px;
+  }
+
+  .stage-badge {
+    font-size: 0.75rem;
+    max-width: 80px;
+    line-height: 1.4;
+  }
+
+  .game-card-top-wrapper {
+    padding: 10px 12px;
+  }
+}
+
+/* =====================================================
+   Season Shot Chart — Mobile
+   ===================================================== */
+
+/* Portrait: panel on top, SVG below */
+@media (max-width: 768px) and (orientation: portrait) {
+    .ssc-layout {
+        flex-direction: column;
+        height: calc(100vh - 50px);
+        justify-content: flex-start;
+    }
+    .ssc-panel {
+        width: 100%;
+        max-height: 160px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        border-left: none;
+        border-bottom: 1px solid var(--border);
+        padding: 8px;
+        gap: 6px;
+        flex-shrink: 0;
+        align-content: flex-start;
+        direction: rtl;
+    }
+    .sc-player-btn, .sc-all-btn {
+        flex-shrink: 0;
+        width: auto;
+        padding: 8px 14px;
+        white-space: nowrap;
+    }
+    .ssc-court {
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+    }
+    .ssc-court .sc-court-svg {
+        height: 100%;
+        width: 100%;
+    }
+}
+
+/* Landscape: narrow panel on right, SVG fills remaining */
+@media (max-width: 768px) and (orientation: landscape) {
+    .ssc-layout {
+        flex-direction: row;
+        height: calc(100vh - 50px);
+    }
+    .ssc-panel {
+        width: 100px;
+        min-width: 100px;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-left: 1px solid var(--border);
+        gap: 4px;
+        padding: 8px 4px;
+    }
+    .sc-player-btn, .sc-all-btn {
+        width: 100% !important;
+        font-size: 0.8rem;
+        padding: 8px 4px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .ssc-court {
+        flex: 1 !important;
+        width: auto !important;
+        min-width: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ssc-court .sc-court-svg {
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        aspect-ratio: 1827 / 2189;
+    }
+}
+
+/* =====================================================
+   Player Profile Shot Chart — Mobile Portrait
+   ===================================================== */
+@media (max-width: 768px) and (orientation: portrait) {
+    .psc-layout {
+        height: 400px;
+        margin: 0 -12px;
+        overflow: visible;
+    }
+    .psc-layout .ssc-court .sc-court-svg {
+        height: 400px;
+    }
+    .psc-layout .ssc-court {
+        overflow: visible;
+        position: relative;
+    }
+    .sc-badge.sc-badge-sm {
+        padding: 3px 6px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+    }
+    .sc-badge.sc-badge-sm .sc-badge-label { font-size: 9px !important; }
+    .sc-badge.sc-badge-sm .sc-badge-stats { font-size: 14px !important; }
+    .sc-badge.sc-badge-sm .sc-badge-pct   { font-size: 11px !important; }
+}
+
+/* Player Profile Shot Chart — Mobile Landscape */
+@media (max-width: 768px) and (orientation: landscape) {
+    .psc-layout {
+        height: calc(100vh - 50px);
+        margin: 0 -12px;
+        overflow: hidden;
+    }
+    .psc-layout .ssc-court {
+        flex: 1;
+        overflow: hidden;
+    }
+    .psc-layout .ssc-court .sc-court-svg {
+        height: 100%;
+        width: auto;
+        aspect-ratio: 1827 / 2189;
+    }
 }

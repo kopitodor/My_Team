@@ -970,8 +970,21 @@ function pscUpdateCourt() {
             if (!svgEl) return;
             const svgRect  = svgEl.getBoundingClientRect();
             const areaRect = badgesEl.parentElement.getBoundingClientRect();
-            badgesEl.style.top   = (svgRect.top - areaRect.top + 8) + 'px';
-            badgesEl.style.right = '8px';
+            const isLandscapeMobile = window.innerWidth <= 768 && window.innerWidth > window.innerHeight;
+            const isPortraitMobile  = window.innerWidth <= 768 && window.innerWidth <= window.innerHeight;
+            if (isLandscapeMobile) {
+                badgesEl.style.top   = (svgRect.top - areaRect.top) + 'px';
+                badgesEl.style.left  = (svgRect.right - areaRect.left + 8) + 'px';
+                badgesEl.style.right = 'auto';
+            } else if (isPortraitMobile) {
+                badgesEl.style.top   = (svgRect.top - areaRect.top) + 'px';
+                badgesEl.style.right = '4px';
+                badgesEl.style.left  = 'auto';
+            } else {
+                badgesEl.style.top   = (svgRect.top - areaRect.top + 8) + 'px';
+                badgesEl.style.right = '8px';
+                badgesEl.style.left  = 'auto';
+            }
         });
     }
 
@@ -1378,8 +1391,16 @@ function sscUpdateCourt() {
         requestAnimationFrame(() => {
             const svgRect  = svg.getBoundingClientRect();
             const areaRect = badgesEl.parentElement.getBoundingClientRect();
-            badgesEl.style.top   = (svgRect.top - areaRect.top + 12) + 'px';
-            badgesEl.style.right = '8px';
+            const isLandscapeMobile = window.innerWidth <= 768 && window.innerWidth > window.innerHeight;
+            if (isLandscapeMobile) {
+                badgesEl.style.top   = (svgRect.top - areaRect.top) + 'px';
+                badgesEl.style.left  = (svgRect.right - areaRect.left + 8) + 'px';
+                badgesEl.style.right = 'auto';
+            } else {
+                badgesEl.style.top   = (svgRect.top - areaRect.top + 12) + 'px';
+                badgesEl.style.right = '8px';
+                badgesEl.style.left  = 'auto';
+            }
         });
     }
 
@@ -1516,10 +1537,17 @@ function scUpdateCourt(sc) {
 
     // Align badge column top with SVG's rendered top edge
     requestAnimationFrame(() => {
-        const svgRect    = svg.getBoundingClientRect();
-        const areaRect   = badgesEl.parentElement.getBoundingClientRect();
-        badgesEl.style.top   = (svgRect.top - areaRect.top + 12) + 'px';
-        badgesEl.style.right = '8px';
+        const svgRect  = svg.getBoundingClientRect();
+        const areaRect = badgesEl.parentElement.getBoundingClientRect();
+        badgesEl.style.top = (svgRect.top - areaRect.top + 12) + 'px';
+        const isLandscapeMobile = window.innerWidth <= 768 && window.innerWidth > window.innerHeight;
+        if (isLandscapeMobile) {
+            badgesEl.style.left  = (svgRect.right - areaRect.left + 8) + 'px';
+            badgesEl.style.right = 'auto';
+        } else {
+            badgesEl.style.right = '8px';
+            badgesEl.style.left  = 'auto';
+        }
     });
 }
 
@@ -1643,7 +1671,19 @@ function openShotChartModal(gameId) {
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    requestAnimationFrame(() => scUpdateCourt(sc));
+    requestAnimationFrame(() => {
+        scUpdateCourt(sc);
+        const panel = modal.querySelector('.sc-player-panel');
+        if (panel) {
+            // Portrait: horizontal scroll — bring כולם into view on the right
+            // Landscape: vertical scroll — ensure we start at the top
+            if (window.innerWidth > window.innerHeight) {
+                panel.scrollTop = 0;
+            } else {
+                panel.scrollLeft = panel.scrollWidth;
+            }
+        }
+    });
 }
 
 function closeShotChartModal() {
