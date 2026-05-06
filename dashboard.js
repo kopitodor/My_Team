@@ -89,7 +89,7 @@ async function loadData() {
             fetch('games.json').then(r => r.json()),
             fetch('players.json').then(r => r.json()),
             fetch('players_stats.json').then(r => r.json()),
-            fetch('rotations.json').then(r => r.json()),
+            fetch('rotations.json').then(r => r.json()).catch(() => []),
             fetch('shot_charts.json').then(r => r.json()).catch(() => []),
             fetch('teams_stats.json').then(r => r.json()),
         ]);
@@ -488,12 +488,8 @@ function populateGames() {
                     </div>
 
                     <div style="margin-top:20px; display:flex; justify-content:center; gap:12px; border-top:1px dashed var(--border); padding-top:15px;">
-                        <button class="adv-toggle-btn"
-                                style="border-color:var(--accent); color:var(--accent);"
-                                onclick="event.stopPropagation(); openRotationModal('${g.game_id}')">
-                            📋 צפה במהלך המשחק ורוטציות
-                        </button>
-                        ${data.shotChartByGame[String(g.game_id)] ? scGameBtn(g.game_id) : ""}
+                        ${rotationBtn(g.game_id)}
+                        ${shotChartBtn(g.game_id)}
                     </div>
                 </div>
             </div>`;
@@ -795,6 +791,217 @@ function renderPlayerProfile() {
 
     container.innerHTML = modeToggle + careerTable + seasonTable + highsTable;
     applyTableSeparators();
+
+    // Append shot chart section below
+    renderProfileShotChart(pid, seasons);
+}
+
+/* =====================================================
+   Player Profile Shot Chart
+   ===================================================== */
+function renderProfileShotChart(pid, seasons) {
+    const container = document.getElementById('profile-content');
+    if (!container) return;
+
+    // Only include seasons that have shot chart data for this player
+    const validSeasons = seasons.filter(s => {
+        const sIds = new Set(data.games.filter(g => g.season === s).map(g => String(g.game_id)));
+        return [...sIds].some(gid => {
+            const sc = data.shotChartByGame[gid];
+            if (!sc) return false;
+            // Check if this player appears in this game's shot chart
+            const pid_str = String(pid);
+            return Object.values(sc.player_mapping).some(p => String(p) === pid_str);
+        });
+    });
+
+    if (validSeasons.length === 0) {
+        // No shot chart data for this player — show message at bottom of profile
+        const noDataEl = document.createElement('div');
+        noDataEl.style.cssText = 'margin-top:40px; padding:20px; text-align:center; color:#94a3b8; font-size:1rem; font-weight:600;';
+        noDataEl.textContent = 'מפת זריקות - המידע לא זמין';
+        container.appendChild(noDataEl);
+        return;
+    }
+
+    // Init active seasons: all on by default, reset when player changes
+    const allSeasonsSet = new Set(validSeasons);
+    // Prune invalid seasons from existing selection
+    const stillValid = [...scProfileActiveSeasons].filter(s => allSeasonsSet.has(s));
+    scProfileActiveSeasons = stillValid.length > 0 ? new Set(stillValid) : new Set(validSeasons);
+
+    // Build the section HTML and append it
+    const scSection = document.createElement('div');
+    scSection.id = 'profile-sc-section';
+    scSection.style.cssText = 'margin-top:40px;';
+
+    const seasonBtns = validSeasons.map(s => `
+        <div class="season-pill ${scProfileActiveSeasons.has(s) ? 'active' : ''}"
+             id="psc-pill-${s.replace(/\//g,'-')}"
+             onclick="pscToggleSeason('${s}')">${s}</div>
+    `).join('');
+
+    scSection.innerHTML = `
+        <h3 class="profile-table-title" style="margin-bottom:20px;">מפת זריקות אישית</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; padding:10px 0;">
+            <div class="season-pill ${scProfileActiveSeasons.size === allSeasonsSet.size ? 'active' : ''}"
+                 id="psc-pill-all" onclick="pscToggleAll()">כולם</div>
+            ${seasonBtns}
+        </div>
+        <div class="psc-layout" id="psc-layout">
+            <div class="ssc-court" style="position:relative;">
+                ${buildCourtSVG('psc-half-court')}
+                <div class="sc-badges" id="psc-badges"></div>
+            </div>
+        </div>`;
+
+    container.appendChild(scSection);
+
+    // Store data for toggle functions
+    window._pscPid     = String(pid);
+    window._pscSeasons = validSeasons;
+
+    requestAnimationFrame(() => requestAnimationFrame(() => pscUpdateCourt()));
+}
+
+function pscBuildUnifiedSc() {
+    const pid     = window._pscPid;
+    const seasons = window._pscSeasons;
+    if (!pid || !seasons) return null;
+
+    const ZONES = ['right_corner_3','right_corner_mid','right_45_3','right_45_mid',
+                   'right_floater','layup','left_floater','front_floater',
+                   'free_throw_line','top_of_the_key','left_45_3','left_corner_mid',
+                   'left_45_mid','left_corner_3'];
+
+    const mergedShots = {};
+    ZONES.forEach(zone => mergedShots[zone] = '');
+
+    // Fixed char for this single player
+    const MY_CHAR = 'A';
+
+    seasons.forEach(s => {
+        if (!scProfileActiveSeasons.has(s)) return;
+        const sIds = new Set(data.games.filter(g => g.season === s).map(g => String(g.game_id)));
+        sIds.forEach(gid => {
+            if (!activeGameIds.has(gid)) return;
+            const sc = data.shotChartByGame[gid];
+            if (!sc) return;
+            // Find the char used for this player in this game
+            const charForPlayer = Object.entries(sc.player_mapping)
+                .find(([, p]) => String(p) === pid)?.[0];
+            if (!charForPlayer) return;
+
+            ZONES.forEach(zone => {
+                const shots = sc.shots_data[zone];
+                if (!shots || shots === '0') return;
+                for (const ch of shots) {
+                    if (ch.toUpperCase() === charForPlayer.toUpperCase()) {
+                        // Preserve make/miss case, remap to MY_CHAR
+                        mergedShots[zone] += (ch === ch.toUpperCase()) ? MY_CHAR : MY_CHAR.toLowerCase();
+                    }
+                }
+            });
+        });
+    });
+
+    return { player_mapping: { [MY_CHAR]: pid }, shots_data: mergedShots };
+}
+
+function pscUpdateCourt() {
+    const svg = document.getElementById('psc-half-court');
+    if (!svg) return;
+
+    svg.querySelectorAll('.sc-label').forEach(l => l.remove());
+
+    const sc = pscBuildUnifiedSc();
+    if (!sc) return;
+
+    // Use a local active-set of just our one char so scCalcZone works
+    const saved = scActivePlayers;
+    scActivePlayers = new Set(['A']);
+
+    Object.entries(sc.shots_data).forEach(([rawZone, shotString]) => {
+        const zoneId = 'sc_' + rawZone;
+        const el = svg.querySelector('#' + zoneId);
+        if (!el) return;
+
+        const { made, total, pct } = scCalcZone(shotString);
+        el.style.fill = total === 0 ? SC_CONFIG.emptyColor : scGetColor(zoneId, pct);
+
+        const bbox = el.getBBox();
+        const { x, y } = scLabelPos(rawZone, bbox);
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('class', 'sc-label');
+        label.setAttribute('x', x);
+        label.setAttribute('y', y);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('dominant-baseline', 'central');
+        label.setAttribute('transform', `rotate(90, ${x}, ${y})`);
+        if (scIsCornerZone(rawZone)) {
+            label.innerHTML = `<tspan x="${x}">${made}/${total}</tspan><tspan dx="60">${pct}%</tspan>`;
+        } else {
+            label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
+        }
+        svg.appendChild(label);
+    });
+
+    // Badges
+    const badgesEl = document.getElementById('psc-badges');
+    if (badgesEl) {
+        badgesEl.innerHTML = Object.entries(SC_SUMMARY_GROUPS).map(([label, zones]) => {
+            let made = 0, total = 0;
+            zones.forEach(zoneId => {
+                const rawZone = zoneId.replace('sc_', '');
+                const { made: m, total: t } = scCalcZone(sc.shots_data[rawZone]);
+                made += m; total += t;
+            });
+            const pct = total > 0 ? Math.round(made / total * 100) : 0;
+            return `<div class="sc-badge sc-badge-sm">
+                <span class="sc-badge-label">${label}</span>
+                <span class="sc-badge-stats">${made}/${total}</span>
+                <span class="sc-badge-pct">${pct}%</span>
+            </div>`;
+        }).join('');
+
+        requestAnimationFrame(() => {
+            const svgEl   = document.getElementById('psc-half-court');
+            if (!svgEl) return;
+            const svgRect  = svgEl.getBoundingClientRect();
+            const areaRect = badgesEl.parentElement.getBoundingClientRect();
+            badgesEl.style.top   = (svgRect.top - areaRect.top + 8) + 'px';
+            badgesEl.style.right = '8px';
+        });
+    }
+
+    scActivePlayers = saved;
+}
+
+function pscToggleSeason(s) {
+    if (scProfileActiveSeasons.has(s)) scProfileActiveSeasons.delete(s);
+    else scProfileActiveSeasons.add(s);
+    pscRenderPills();
+    pscUpdateCourt();
+}
+
+function pscToggleAll() {
+    const all = window._pscSeasons || [];
+    if (scProfileActiveSeasons.size === all.length) scProfileActiveSeasons.clear();
+    else all.forEach(s => scProfileActiveSeasons.add(s));
+    pscRenderPills();
+    pscUpdateCourt();
+}
+
+function pscRenderPills() {
+    const all = window._pscSeasons || [];
+    const allOn = scProfileActiveSeasons.size === all.length;
+    const allPill = document.getElementById('psc-pill-all');
+    if (allPill) allPill.classList.toggle('active', allOn);
+    all.forEach(s => {
+        const pill = document.getElementById('psc-pill-' + s.replace(/\//g,'-'));
+        if (pill) pill.classList.toggle('active', scProfileActiveSeasons.has(s));
+    });
 }
 
 /* =====================================================
@@ -937,13 +1144,17 @@ window.addEventListener('click', event => {
 
 const SC_CONFIG = {
     emptyColor: '#2a2a2a',
+    // For each category: red=best, grey=neutral band, blue=worst
+    // red:   >= redMin  → full red, interpolate red→grey between redMin and greyTop
+    // grey:  greyTop to greyBot → grey
+    // blue:  greyBot down to blueMax → interpolate grey→blue, below blueMax → full blue
     thresholds: {
-        threePoint: { hot: 40, warm: 35, mid: 30, cool: 25 },
-        midRange:   { hot: 50, warm: 45, mid: 40, cool: 35 },
-        floater:    { hot: 55, warm: 48, mid: 42, cool: 35 },
-        layup:      { hot: 70, warm: 60, mid: 50, cool: 40 }
+        threePoint: { redMin: 44, greyTop: 30, greyBot: 28, blueMax: 18 },
+        midRange:   { redMin: 57, greyTop: 35, greyBot: 30, blueMax: 20 },
+        floater:    { redMin: 62, greyTop: 45, greyBot: 42, blueMax: 18 },
+        layup:      { redMin: 68, greyTop: 52, greyBot: 50, blueMax: 35 },
     },
-    colors: { hot: '#c0392b', warm: '#884444', neutral: '#6a6a6a', cool: '#445588', cold: '#1a3aaa' }
+    colors: { red: '#c0392b', grey: '#6a6a6a', blue: '#1a3aaa' }
 };
 
 const SC_SUMMARY_GROUPS = {
@@ -958,6 +1169,9 @@ let scActivePlayers = new Set();
 
 // Season shot chart state (separate from per-game modal)
 let scSeasonActivePlayers = new Set();
+
+// Player profile shot chart state
+let scProfileActiveSeasons = new Set();
 
 /* =====================================================
    Season Shot Chart Page
@@ -976,8 +1190,17 @@ function populateSeasonShotChart() {
         .map(id => data.shotChartByGame[id])
         .filter(Boolean);
 
+    // Update nav button appearance based on data availability
+    const navBtn = document.getElementById('nav-season-shotchart');
+    const noData = !data.shotChartByGame || Object.keys(data.shotChartByGame).length === 0;
+    if (navBtn) {
+        navBtn.style.opacity    = noData ? '0.45' : '';
+        navBtn.style.cursor     = noData ? 'default' : '';
+        navBtn.style.pointerEvents = noData ? 'none' : '';
+    }
+
     if (seasonCharts.length === 0) {
-        container.innerHTML = '<p style="padding:40px; text-align:center; color:#94a3b8;">אין נתוני מפת זריקות לעונה זו</p>';
+        container.innerHTML = '<p style="padding:40px; text-align:center; color:#94a3b8;">מפת זריקות - המידע לא זמין</p>';
         return;
     }
 
@@ -1077,8 +1300,8 @@ function sscTogglePlayer(char) {
 }
 
 function sscToggleAll() {
-    const allChars = window._sscAllChars || Object.keys(window._sscData.player_mapping);
-    if (scSeasonActivePlayers.size > 0) scSeasonActivePlayers.clear();
+    const allChars = Object.keys(window._sscData.player_mapping);
+    if (scSeasonActivePlayers.size === allChars.length) scSeasonActivePlayers.clear();
     else allChars.forEach(c => scSeasonActivePlayers.add(c));
     sscRenderButtons();
     sscUpdateCourt();
@@ -1116,11 +1339,7 @@ function sscUpdateCourt() {
         zoneEl.style.fill = total === 0 ? SC_CONFIG.emptyColor : scGetColor(zoneId, pct);
 
         const bbox = zoneEl.getBBox();
-        let x = bbox.x + bbox.width / 2;
-        let y = bbox.y + bbox.height / 2;
-        if (rawZone === 'left_corner_3')  x -= 55;
-        else if (rawZone === 'right_corner_3') x += 55;
-        else if (rawZone.includes('3') || rawZone === 'top_of_the_key') y -= 180;
+        const { x, y } = scLabelPos(rawZone, bbox);
 
         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         label.setAttribute('class', 'sc-label');
@@ -1128,7 +1347,12 @@ function sscUpdateCourt() {
         label.setAttribute('y', y);
         label.setAttribute('text-anchor', 'middle');
         label.setAttribute('dominant-baseline', 'central');
-        label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
+        label.setAttribute('transform', `rotate(90, ${x}, ${y})`);
+        if (scIsCornerZone(rawZone)) {
+            label.innerHTML = `<tspan x="${x}">${made}/${total}</tspan><tspan dx="60">${pct}%</tspan>`;
+        } else {
+            label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
+        }
         svg.appendChild(label);
     });
 
@@ -1149,9 +1373,47 @@ function sscUpdateCourt() {
                 <span class="sc-badge-pct">${pct}%</span>
             </div>`;
         }).join('');
+
+        // Align badge top with SVG's rendered top edge
+        requestAnimationFrame(() => {
+            const svgRect  = svg.getBoundingClientRect();
+            const areaRect = badgesEl.parentElement.getBoundingClientRect();
+            badgesEl.style.top   = (svgRect.top - areaRect.top + 12) + 'px';
+            badgesEl.style.right = '8px';
+        });
     }
 
     scActivePlayers = saved;
+}
+
+/* Shared label x/y positioning — call after getBBox(). */
+function scLabelPos(rawZone, bbox) {
+    let x = bbox.x + bbox.width  / 2;
+    let y = bbox.y + bbox.height / 2;
+
+    // Push corner_3 labels to their respective edges
+    if (rawZone === 'right_corner_3') x = bbox.x + bbox.width * 0.75;
+    if (rawZone === 'left_corner_3')  x = bbox.x + bbox.width * 0.30;
+    if (rawZone === 'right_corner_3') y = bbox.y + bbox.height * 0.65;
+    if (rawZone === 'left_corner_3')  y = bbox.y + bbox.height * 0.65;
+
+    // Push right_corner_mis and right_floater labels up a little
+    if (rawZone === 'right_corner_mid') x = bbox.x + bbox.width * 0.60;
+    if (rawZone === 'right_floater')  x = bbox.x + bbox.width * 0.60;
+
+    // Push corner_mids a little to the left 
+    if (rawZone === 'right_corner_mid') y = bbox.y + bbox.height * 0.42;
+    if (rawZone === 'left_corner_mid')  y = bbox.y + bbox.height * 0.42;
+
+    // 3pt and top-of-key zones: shift y up (toward basket in rotated view)
+    if (rawZone.includes('3') || rawZone === 'top_of_the_key') y -= 180;
+
+    return { x, y };
+}
+
+/* Corner_3 zones: single line "x/y  pct%" */
+function scIsCornerZone(rawZone) {
+    return rawZone === 'left_corner_3' || rawZone === 'right_corner_3';
 }
 
 function scGetCategory(zoneId) {
@@ -1163,12 +1425,28 @@ function scGetCategory(zoneId) {
 
 function scGetColor(zoneId, pct) {
     const t = SC_CONFIG.thresholds[scGetCategory(zoneId)];
-    const c = SC_CONFIG.colors;
-    if (pct >= t.hot)  return c.hot;
-    if (pct >= t.warm) return c.warm;
-    if (pct >= t.mid)  return c.neutral;
-    if (pct >= t.cool) return c.cool;
-    return c.cold;
+    const { red, grey, blue } = SC_CONFIG.colors;
+
+    if (pct >= t.redMin)  return red;
+    if (pct >= t.greyTop) return scLerpColor(grey, red,  (pct - t.greyTop) / (t.redMin  - t.greyTop));
+    if (pct >= t.greyBot) return grey;
+    if (pct >= t.blueMax) return scLerpColor(blue, grey, (pct - t.blueMax) / (t.greyBot - t.blueMax));
+    return blue;
+}
+
+function scLerpColor(a, b, t) {
+    // t=0 → color a, t=1 → color b
+    const hex = c => [
+        parseInt(c.slice(1,3),16),
+        parseInt(c.slice(3,5),16),
+        parseInt(c.slice(5,7),16)
+    ];
+    const [ar,ag,ab] = hex(a);
+    const [br,bg,bb] = hex(b);
+    const r = Math.round(ar + (br-ar)*t);
+    const g = Math.round(ag + (bg-ag)*t);
+    const bl = Math.round(ab + (bb-ab)*t);
+    return `rgb(${r},${g},${bl})`;
 }
 
 function scCalcZone(shotString) {
@@ -1201,11 +1479,7 @@ function scUpdateCourt(sc) {
 
         // Label
         const bbox = el.getBBox();
-        let x = bbox.x + bbox.width / 2;
-        let y = bbox.y + bbox.height / 2;
-        if (rawZone === 'left_corner_3')  x -= 55;
-        else if (rawZone === 'right_corner_3') x += 55;
-        else if (rawZone.includes('3') || rawZone === 'top_of_the_key') y -= 180;
+        const { x, y } = scLabelPos(rawZone, bbox);
 
         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         label.setAttribute('class', 'sc-label');
@@ -1213,11 +1487,16 @@ function scUpdateCourt(sc) {
         label.setAttribute('y', y);
         label.setAttribute('text-anchor', 'middle');
         label.setAttribute('dominant-baseline', 'central');
-        label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
+        label.setAttribute('transform', `rotate(90, ${x}, ${y})`);
+        if (scIsCornerZone(rawZone)) {
+            label.innerHTML = `<tspan x="${x}">${made}/${total}</tspan><tspan dx="60">${pct}%</tspan>`;
+        } else {
+            label.innerHTML = `<tspan x="${x}" dy="-50">${made}/${total}</tspan><tspan x="${x}" dy="130">${pct}%</tspan>`;
+        }
         svg.appendChild(label);
     });
 
-    // Summary badges
+    // Summary badges — position relative to SVG's actual rendered top-right corner
     const badgesEl = document.getElementById('sc-badges');
     if (!badgesEl) return;
     badgesEl.innerHTML = Object.entries(SC_SUMMARY_GROUPS).map(([label, zones]) => {
@@ -1234,6 +1513,14 @@ function scUpdateCourt(sc) {
             <span class="sc-badge-pct">${pct}%</span>
         </div>`;
     }).join('');
+
+    // Align badge column top with SVG's rendered top edge
+    requestAnimationFrame(() => {
+        const svgRect    = svg.getBoundingClientRect();
+        const areaRect   = badgesEl.parentElement.getBoundingClientRect();
+        badgesEl.style.top   = (svgRect.top - areaRect.top + 12) + 'px';
+        badgesEl.style.right = '8px';
+    });
 }
 
 function scTogglePlayer(char, sc) {
@@ -1244,19 +1531,15 @@ function scTogglePlayer(char, sc) {
 }
 
 function scToggleAll(sc) {
-    const allChars = Object.keys(sc.player_mapping).filter(c =>
-        document.getElementById('sc-btn-' + c) !== null
-    );
-    if (scActivePlayers.size > 0) scActivePlayers.clear();
+    const allChars = Object.keys(sc.player_mapping);
+    if (scActivePlayers.size === allChars.length) scActivePlayers.clear();
     else allChars.forEach(c => scActivePlayers.add(c));
     scRenderButtons(sc);
     scUpdateCourt(sc);
 }
 
 function scRenderButtons(sc) {
-    const allChars = Object.keys(sc.player_mapping).filter(c =>
-        document.getElementById('sc-btn-' + c) !== null
-    );
+    const allChars = Object.keys(sc.player_mapping);
     const allOn = scActivePlayers.size === allChars.length;
     const allBtn = document.getElementById('sc-btn-all');
     if (allBtn) allBtn.classList.toggle('sc-btn-on', allOn);
@@ -1266,8 +1549,22 @@ function scRenderButtons(sc) {
     });
 }
 
-function scGameBtn(gameId) {
-    return '<button class="adv-toggle-btn" style="border-color:#f97316;color:#f97316;" onclick="event.stopPropagation();openShotChartModal(' + gameId + ')">🎯 מפת זריקות</button>';
+function rotationBtn(gameId) {
+    const hasData = data.rotations && data.rotations.some(r => String(r.game_id) === String(gameId));
+    if (hasData) {
+        return `<button class="adv-toggle-btn" style="border-color:var(--accent);color:var(--accent);"
+                    onclick="event.stopPropagation();openRotationModal('${gameId}')">רוטציות</button>`;
+    }
+    return `<button class="adv-toggle-btn" style="border-color:#94a3b8;color:#94a3b8;cursor:default;" disabled>רוטציות - המידע לא זמין</button>`;
+}
+
+function shotChartBtn(gameId) {
+    const hasData = data.shotChartByGame && data.shotChartByGame[String(gameId)];
+    if (hasData) {
+        return `<button class="adv-toggle-btn" style="border-color:#f97316;color:#f97316;"
+                    onclick="event.stopPropagation();openShotChartModal('${gameId}')">מפת זריקות</button>`;
+    }
+    return `<button class="adv-toggle-btn" style="border-color:#94a3b8;color:#94a3b8;cursor:default;" disabled>מפת זריקות - המידע לא זמין</button>`;
 }
 
 function buildCourtSVG(svgId) {
