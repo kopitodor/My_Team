@@ -1,4 +1,4 @@
-﻿  [
+﻿[
   {
     "player_mapping": {
       "A": 1,
@@ -64,5 +64,170 @@
       "layup": "IkLLKKdccgBLGlDglkkBdBgGgglLL"
     },
     "game_id": 46
+  },
+  {
+    "player_mapping": {
+      "A": 1,
+      "B": 4,
+      "C": 23,
+      "D": 15,
+      "E": 6,
+      "F": 7,
+      "G": 8,
+      "H": 9,
+      "I": 10,
+      "J": 11,
+      "K": 12,
+      "L": 21
+    },
+    "shots_data": {
+      "right_corner_3": "BddBdf",
+      "left_corner_3": "IBffbbdFidd",
+      "right_45_3": "IDdbdDid",
+      "left_45_3": "ddDffKikDDk",
+      "top_of_the_key": "BfddDlDh",
+      "right_corner_mid": "0",
+      "left_corner_mid": "0",
+      "right_45_mid": "b",
+      "left_45_mid": "0",
+      "free_throw_line": "LFl",
+      "right_floater": "lLLl",
+      "left_floater": "b",
+      "front_floater": "bfHhh",
+      "layup": "LLkILlbbhkLkki"
+    },
+    "game_id": 47
+  },
+  {
+    "player_mapping": {
+      "A": 1,
+      "B": 4,
+      "C": 23,
+      "D": 15,
+      "E": 6,
+      "F": 7,
+      "G": 8,
+      "H": 9,
+      "I": 10,
+      "J": 11,
+      "K": 12,
+      "L": 21
+    },
+    "shots_data": {
+      "right_corner_3": "dg",
+      "left_corner_3": "iIdd",
+      "right_45_3": "iBbdigIg",
+      "left_45_3": "ggIdGGddG",
+      "top_of_the_key": "GgeidgbIg",
+      "right_corner_mid": "0",
+      "left_corner_mid": "dg",
+      "right_45_mid": "j",
+      "left_45_mid": "j",
+      "free_throw_line": "eeEB",
+      "right_floater": "gg",
+      "left_floater": "eiii",
+      "front_floater": "ieIEe",
+      "layup": "geGKGjgiGKG"
+    },
+    "game_id": 43
+  },
+  {
+    "player_mapping": {
+      "A": 1,
+      "B": 4,
+      "C": 23,
+      "D": 15,
+      "E": 6,
+      "F": 7,
+      "G": 8,
+      "H": 9,
+      "I": 10,
+      "J": 11,
+      "K": 12,
+      "L": 21
+    },
+    "shots_data": {
+      "right_corner_3": "ib",
+      "left_corner_3": "Ii",
+      "right_45_3": "IggfifD",
+      "left_45_3": "kggdd",
+      "top_of_the_key": "D",
+      "right_corner_mid": "l",
+      "left_corner_mid": "jB",
+      "right_45_mid": "B",
+      "left_45_mid": "e",
+      "free_throw_line": "g",
+      "right_floater": "LBL",
+      "left_floater": "GL",
+      "front_floater": "lgGb",
+      "layup": "EEllEgFKGlbLgggkKbbeegBLlL"
+    },
+    "game_id": 44
+  },
+  {
+    "player_mapping": {
+      "A": 1,
+      "B": 4,
+      "C": 23,
+      "D": 15,
+      "E": 6,
+      "F": 7,
+      "G": 8,
+      "H": 9,
+      "I": 10,
+      "J": 11,
+      "K": 12,
+      "L": 21
+    },
+    "shots_data": {
+      "right_corner_3": "dg",
+      "left_corner_3": "ddD",
+      "right_45_3": "ddbdBdd",
+      "left_45_3": "dddgbg",
+      "top_of_the_key": "gbgdd",
+      "right_corner_mid": "bb",
+      "left_corner_mid": "d",
+      "right_45_mid": "0",
+      "left_45_mid": "0",
+      "free_throw_line": "db",
+      "right_floater": "LLlLblBl",
+      "left_floater": "Lbe",
+      "front_floater": "lbgBLldlg",
+      "layup": "lLgLLLlbglglBgblLkKkbkbLBlGGl"
+    },
+    "game_id": 45
+  },
+  {
+    "player_mapping": {
+      "A": 1,
+      "B": 4,
+      "C": 23,
+      "D": 15,
+      "E": 6,
+      "F": 7,
+      "G": 8,
+      "H": 9,
+      "I": 10,
+      "J": 11,
+      "K": 12,
+      "L": 21
+    },
+    "shots_data": {
+      "right_corner_3": "Ddbd",
+      "left_corner_3": "DdbgDkD",
+      "right_45_3": "ggbDDbf",
+      "left_45_3": "gFgdDfdDgDg",
+      "top_of_the_key": "dedbdd",
+      "right_corner_mid": "b",
+      "left_corner_mid": "0",
+      "right_45_mid": "d",
+      "left_45_mid": "0",
+      "free_throw_line": "Bgb",
+      "right_floater": "lLbLb",
+      "left_floater": "e",
+      "front_floater": "edL",
+      "layup": "LGeglgLgllgLLlkglgdLLKd"
+    },
+    "game_id": 48
   }
 ]
