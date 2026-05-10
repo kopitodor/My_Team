@@ -17468,7 +17468,7 @@
   {
     "game_id": 47,
     "player_id": 4,
-    "starter": "אמינוב",
+    "starter": 1,
     "MIN": 24,
     "PTS": 12,
     "2PA": 5,
@@ -17509,7 +17509,7 @@
   {
     "game_id": 47,
     "player_id": 15,
-    "starter": "גולן",
+    "starter": 1,
     "MIN": 38,
     "PTS": 21,
     "2PA": 0,
@@ -17550,7 +17550,7 @@
   {
     "game_id": 47,
     "player_id": 6,
-    "starter": "יאיר",
+    "starter": "",
     "MIN": 31,
     "PTS": 6,
     "2PA": 2,
@@ -17591,7 +17591,7 @@
   {
     "game_id": 47,
     "player_id": 9,
-    "starter": "סלם",
+    "starter": 1,
     "MIN": 31,
     "PTS": 3,
     "2PA": 4,
@@ -17632,7 +17632,7 @@
   {
     "game_id": 47,
     "player_id": 10,
-    "starter": "צח",
+    "starter": 1,
     "MIN": 29,
     "PTS": 8,
     "2PA": 2,
@@ -17673,7 +17673,7 @@
   {
     "game_id": 47,
     "player_id": 12,
-    "starter": "שי",
+    "starter": "",
     "MIN": 24,
     "PTS": 3,
     "2PA": 4,
@@ -17714,7 +17714,7 @@
   {
     "game_id": 47,
     "player_id": 21,
-    "starter": "תמיר",
+    "starter": 1,
     "MIN": 23,
     "PTS": 18,
     "2PA": 11,
