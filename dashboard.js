@@ -2,7 +2,8 @@
    State
    ===================================================== */
 let data = { games: [], players: {}, playersStats: [], rotations: [], teamStats: [] };
-let activeGameIds    = new Set();
+let activeGameIds    = new Set();   // games in the current season (for games/players/teams views)
+let disabledGameIds  = new Set();   // games explicitly toggled OFF by the user (persists across seasons)
 let currentSection   = 'games';
 let currentSeason    = null;
 let currentStatMode  = 'AVG';
@@ -192,7 +193,8 @@ function selectSeason(s) {
 function updateActiveGamesBySeason() {
     activeGameIds.clear();
     data.games.forEach(g => {
-        if (String(g.season) === String(currentSeason)) activeGameIds.add(String(g.game_id));
+        if (String(g.season) === String(currentSeason) && !disabledGameIds.has(String(g.game_id)))
+            activeGameIds.add(String(g.game_id));
     });
 }
 
@@ -215,7 +217,8 @@ function toggleAdvancedMode() {
    ===================================================== */
 function handleGameToggle(id, chk, e) {
     e.stopPropagation();
-    chk ? activeGameIds.add(String(id)) : activeGameIds.delete(String(id));
+    if (chk) { disabledGameIds.delete(String(id)); activeGameIds.add(String(id)); }
+    else      { disabledGameIds.add(String(id));    activeGameIds.delete(String(id)); }
     // Re-render players & teams (which depend on activeGameIds), but NOT games list
     populatePlayers();
     populateTeams();
@@ -884,7 +887,7 @@ function pscBuildUnifiedSc() {
         if (!scProfileActiveSeasons.has(s)) return;
         const sIds = new Set(data.games.filter(g => g.season === s).map(g => String(g.game_id)));
         sIds.forEach(gid => {
-            if (!activeGameIds.has(gid)) return;
+            if (disabledGameIds.has(gid)) return;
             const sc = data.shotChartByGame[gid];
             if (!sc) return;
             // Find the char used for this player in this game
