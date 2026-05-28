@@ -37,6 +37,43 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
 });
 
+/* =====================================================
+   Orientation / resize — re-render visible shot charts
+   ===================================================== */
+(function () {
+    let _scResizeTimer = null;
+
+    function onOrientationChange() {
+        // Wait for the browser to finish reflowing after rotation before re-rendering
+        clearTimeout(_scResizeTimer);
+        _scResizeTimer = setTimeout(() => {
+            // Season shot chart page
+            if (document.getElementById('ssc-half-court')) {
+                sscUpdateCourt();
+            }
+            // Player profile shot chart (inline in page)
+            if (document.getElementById('psc-half-court')) {
+                pscUpdateCourt();
+            }
+            // Game shot chart modal (if open)
+            if (document.getElementById('shot-chart-modal')?.classList.contains('open') &&
+                document.getElementById('sc-half-court')) {
+                const sc = window._currentGameSC;
+                if (sc) scUpdateCourt(sc);
+            }
+        }, 150); // 150ms gives the browser time to reflow dimensions after rotation
+    }
+
+    // screen.orientation API (modern browsers)
+    if (screen?.orientation) {
+        screen.orientation.addEventListener('change', onOrientationChange);
+    }
+    // Legacy fallback
+    window.addEventListener('orientationchange', onOrientationChange);
+    // Also catch desktop resize (drag window narrower/wider)
+    window.addEventListener('resize', onOrientationChange);
+})();
+
 function toggleShareMode(btn) {
     shareMode = !shareMode;
     document.body.classList.toggle('share-mode', shareMode);
@@ -1752,6 +1789,7 @@ function openShotChartModal(gameId) {
     });
 
     requestAnimationFrame(() => {
+        window._currentGameSC = sc;  // stored for orientation-change re-render
         scUpdateCourt(sc);
         const panel = modal.querySelector('.sc-player-panel');
         if (panel) {
@@ -1770,6 +1808,7 @@ function closeShotChartModal() {
     const modal = document.getElementById('shot-chart-modal');
     modal.classList.remove('open');
     document.body.style.overflow = '';
+    window._currentGameSC = null;
 
     // Also close on backdrop click
     modal.onclick = null;
