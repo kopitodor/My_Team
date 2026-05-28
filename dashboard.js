@@ -12,6 +12,11 @@ let sortConfig       = { key: null, direction: 'desc', tableId: null };
 let openBoxScores    = new Set();
 let shareMode        = false;
 
+// With/Without page state
+let wwPrimaryPid   = null;
+let wwSecondaryPid = null;
+let wwActiveSeasons = new Set(); // seasons selected via pills on the ww page
+
 // Our team name per game_id — built once after load (we are always listed first in teams_stats)
 const MY_TEAM_BY_GAME = {};
 
@@ -34,45 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-season-shotchart').onclick = () => goTo('season-shotchart');
     document.getElementById('nav-teams').onclick           = () => goTo('teams');
     document.getElementById('nav-player-profile').onclick  = () => goTo('player-profile');
+    document.getElementById('nav-with-without').onclick    = () => goTo('with-without');
     loadData();
 });
-
-/* =====================================================
-   Orientation / resize — re-render visible shot charts
-   ===================================================== */
-(function () {
-    let _scResizeTimer = null;
-
-    function onOrientationChange() {
-        // Wait for the browser to finish reflowing after rotation before re-rendering
-        clearTimeout(_scResizeTimer);
-        _scResizeTimer = setTimeout(() => {
-            // Season shot chart page
-            if (document.getElementById('ssc-half-court')) {
-                sscUpdateCourt();
-            }
-            // Player profile shot chart (inline in page)
-            if (document.getElementById('psc-half-court')) {
-                pscUpdateCourt();
-            }
-            // Game shot chart modal (if open)
-            if (document.getElementById('shot-chart-modal')?.classList.contains('open') &&
-                document.getElementById('sc-half-court')) {
-                const sc = window._currentGameSC;
-                if (sc) scUpdateCourt(sc);
-            }
-        }, 150); // 150ms gives the browser time to reflow dimensions after rotation
-    }
-
-    // screen.orientation API (modern browsers)
-    if (screen?.orientation) {
-        screen.orientation.addEventListener('change', onOrientationChange);
-    }
-    // Legacy fallback
-    window.addEventListener('orientationchange', onOrientationChange);
-    // Also catch desktop resize (drag window narrower/wider)
-    window.addEventListener('resize', onOrientationChange);
-})();
 
 function toggleShareMode(btn) {
     shareMode = !shareMode;
@@ -92,10 +61,10 @@ function toggleShareMode(btn) {
    Navigation — only re-render the section we're going to
    ===================================================== */
 function goTo(id) {
-    if (currentSection === id) return; // already here — nothing to do
+    if (currentSection === id) return;
     currentSection = id;
 
-    const pages = ['games','players','teams','player-profile','season-shotchart'];
+    const pages = ['games','players','teams','player-profile','season-shotchart','with-without'];
     pages.forEach(p => {
         const section = document.getElementById('sec-' + p);
         const btn     = document.getElementById('nav-' + p);
@@ -118,6 +87,7 @@ function renderCurrentSection() {
         case 'teams':          populateTeams();   break;
         case 'player-profile': renderPlayerProfile(); break;
         case 'season-shotchart': populateSeasonShotChart(); break;
+        case 'with-without':   renderWithWithout(); break;
     }
 }
 
@@ -1789,7 +1759,6 @@ function openShotChartModal(gameId) {
     });
 
     requestAnimationFrame(() => {
-        window._currentGameSC = sc;  // stored for orientation-change re-render
         scUpdateCourt(sc);
         const panel = modal.querySelector('.sc-player-panel');
         if (panel) {
@@ -1808,15 +1777,260 @@ function closeShotChartModal() {
     const modal = document.getElementById('shot-chart-modal');
     modal.classList.remove('open');
     document.body.style.overflow = '';
-    window._currentGameSC = null;
 
     // Also close on backdrop click
     modal.onclick = null;
 }
 
 /* =====================================================
-   Share / Screenshot helpers
+   With / Without page   (עם / בלי)
    ===================================================== */
+
+/** All seasons in which a given player_id has at least one game */
+function wwPlayerSeasons(pid) {
+    const gameIds = new Set(
+        data.playersStats
+            .filter(s => String(s.player_id) === String(pid))
+            .map(s => String(s.game_id))
+    );
+    return new Set(
+        data.games
+            .filter(g => gameIds.has(String(g.game_id)))
+            .map(g => String(g.season))
+    );
+}
+
+/** Seasons where BOTH players have played (in any game, not necessarily together) */
+function wwSharedSeasons(pid1, pid2) {
+    const s1 = wwPlayerSeasons(pid1);
+    const s2 = wwPlayerSeasons(pid2);
+    return getSortedSeasons().filter(s => s1.has(s) && s2.has(s));
+}
+
+function renderWithWithout() {
+    const container = document.getElementById('ww-container');
+    if (!container) return;
+
+    const allPlayers = Object.values(data.players).sort((a, b) => a.Name.localeCompare(b.Name, 'he'));
+
+    // Primary dropdown — all players
+    const primaryOptions = allPlayers.map(p =>
+        `<option value="${p.player_id}" ${String(p.player_id) === String(wwPrimaryPid) ? 'selected' : ''}>${p.Name}</option>`
+    ).join('');
+
+    // Secondary dropdown — only players who share at least one season with P1 (if P1 chosen)
+    let secondaryOptions;
+    let secondaryDisabled = '';
+    if (!wwPrimaryPid) {
+        secondaryOptions  = `<option value="">קודם בחר שחקן ראשי...</option>`;
+        secondaryDisabled = 'disabled';
+    } else {
+        const p1Seasons = wwPlayerSeasons(wwPrimaryPid);
+        const eligible  = allPlayers.filter(p =>
+            String(p.player_id) !== String(wwPrimaryPid) &&
+            [...wwPlayerSeasons(p.player_id)].some(s => p1Seasons.has(s))
+        );
+        secondaryOptions = `<option value="">בחר שחקן שני...</option>` +
+            eligible.map(p =>
+                `<option value="${p.player_id}" ${String(p.player_id) === String(wwSecondaryPid) ? 'selected' : ''}>${p.Name}</option>`
+            ).join('');
+    }
+
+    container.innerHTML = `
+        <div class="ww-selectors">
+            <div class="ww-selector-group">
+                <div class="filter-label">שחקן ראשי:</div>
+                <select class="player-dropdown" onchange="wwSetPrimary(this.value)">
+                    <option value="">בחר שחקן...</option>
+                    ${primaryOptions}
+                </select>
+            </div>
+            <div class="ww-separator">&nbsp;<br>עם / בלי</div>
+            <div class="ww-selector-group">
+                <div class="filter-label">שחקן שני:</div>
+                <select class="player-dropdown" ${secondaryDisabled} onchange="wwSetSecondary(this.value)">
+                    ${secondaryOptions}
+                </select>
+            </div>
+        </div>
+        <div id="ww-season-pills"></div>
+        <div id="ww-results"></div>`;
+
+    wwRenderSeasonPills();
+    wwRenderResults();
+}
+
+function wwRenderSeasonPills() {
+    const el = document.getElementById('ww-season-pills');
+    if (!el) return;
+
+    if (!wwPrimaryPid || !wwSecondaryPid) { el.innerHTML = ''; return; }
+
+    const shared = wwSharedSeasons(wwPrimaryPid, wwSecondaryPid);
+    if (!shared.length) { el.innerHTML = ''; return; }
+
+    // If wwActiveSeasons is empty or has seasons no longer valid, reset to all shared
+    const valid = shared.filter(s => wwActiveSeasons.has(s));
+    if (valid.length === 0) wwActiveSeasons = new Set(shared);
+
+    // Pre-compute per-season with/without counts
+    const p2GameIds = new Set(
+        data.playersStats
+            .filter(s => String(s.player_id) === String(wwSecondaryPid))
+            .map(s => String(s.game_id))
+    );
+
+    el.innerHTML = `<div class="ww-season-pills-row">` +
+        shared.map(s => {
+            const seasonGameIds = new Set(
+                data.games
+                    .filter(g => String(g.season) === s)
+                    .map(g => String(g.game_id))
+            );
+            const p1InSeason = data.playersStats.filter(r =>
+                String(r.player_id) === String(wwPrimaryPid) &&
+                seasonGameIds.has(String(r.game_id))
+            );
+            const withCount    = p1InSeason.filter(r =>  p2GameIds.has(String(r.game_id))).length;
+            const withoutCount = p1InSeason.filter(r => !p2GameIds.has(String(r.game_id))).length;
+            return `
+                <div class="ww-pill-wrapper">
+                    <div class="season-pill ${wwActiveSeasons.has(s) ? 'active' : ''}"
+                         onclick="wwToggleSeason('${s}')">${s}</div>
+                    <div class="ww-pill-counts">${withCount} / ${withoutCount}</div>
+                </div>`;
+        }).join('') +
+        `</div>`;
+}
+
+function wwToggleSeason(s) {
+    if (wwActiveSeasons.has(s)) {
+        // Don't allow deselecting the last one
+        if (wwActiveSeasons.size > 1) wwActiveSeasons.delete(s);
+    } else {
+        wwActiveSeasons.add(s);
+    }
+    wwRenderSeasonPills();
+    wwRenderResults();
+}
+
+function wwSetPrimary(pid) {
+    wwPrimaryPid   = pid || null;
+    wwSecondaryPid = null;   // reset secondary — it may no longer be eligible
+    wwActiveSeasons = new Set();
+    renderWithWithout();     // full re-render (dropdowns change)
+}
+
+function wwSetSecondary(pid) {
+    wwSecondaryPid  = pid || null;
+    wwActiveSeasons = new Set(); // reset to all shared seasons
+    wwRenderSeasonPills();
+    wwRenderResults();
+}
+
+function wwRenderResults() {
+    const resultsEl = document.getElementById('ww-results');
+    if (!resultsEl) return;
+
+    if (!wwPrimaryPid || !wwSecondaryPid) {
+        resultsEl.innerHTML = `<p class="ww-hint">בחר שחקן ראשי ושחקן שני כדי לראות את ההשוואה.</p>`;
+        return;
+    }
+
+    const p1Name = data.players[wwPrimaryPid]?.Name  || '??';
+    const p2Name = data.players[wwSecondaryPid]?.Name || '??';
+
+    // Game ids in the selected seasons
+    const wwGameIds = new Set(
+        data.games
+            .filter(g => wwActiveSeasons.has(String(g.season)))
+            .map(g => String(g.game_id))
+    );
+
+    // P1 stats limited to those games
+    const p1Stats = data.playersStats.filter(s =>
+        String(s.player_id) === String(wwPrimaryPid) &&
+        wwGameIds.has(String(s.game_id))
+    );
+
+    if (!p1Stats.length) {
+        resultsEl.innerHTML = `<p class="ww-hint">${p1Name} לא שיחק באף משחק בעונות שנבחרו.</p>`;
+        return;
+    }
+
+    // Games where P2 played (anywhere — not necessarily with P1)
+    const p2GameIds = new Set(
+        data.playersStats
+            .filter(s => String(s.player_id) === String(wwSecondaryPid))
+            .map(s => String(s.game_id))
+    );
+
+    const withRows    = p1Stats.filter(s =>  p2GameIds.has(String(s.game_id)));
+    const withoutRows = p1Stats.filter(s => !p2GameIds.has(String(s.game_id)));
+
+    const withTotal    = withRows.length    ? aggregatePlayerStats(withRows)    : null;
+    const withoutTotal = withoutRows.length ? aggregatePlayerStats(withoutRows) : null;
+
+    const cols = Object.keys(p1Stats[0]).filter(k =>
+        !ALWAYS_HIDDEN.includes(k) && !['gp','player_id','game_id','starter'].includes(k)
+    );
+
+    function renderRow(label, total, gp, cls) {
+        if (!total) return `<tr class="ww-row-empty"><td class="player-name-cell" colspan="${cols.length + 2}">${label} — אין משחקים</td></tr>`;
+        return `<tr class="${cls}">
+            <td class="player-name-cell ww-label-cell">${label}</td>
+            ${cols.map(c => `<td>${smartRound(getCellValue(total, c, 'AVG'))}</td>`).join('')}
+            <td>${gp}</td>
+        </tr>`;
+    }
+
+    function renderDeltaRow(t1, t2) {
+        if (!t1 || !t2) return '';
+        return `<tr class="ww-delta-row">
+            <td class="player-name-cell ww-label-cell">הפרש</td>
+            ${cols.map(c => {
+                const n1 = parseFloat(getCellValue(t1, c, 'AVG'));
+                const n2 = parseFloat(getCellValue(t2, c, 'AVG'));
+                if (isNaN(n1) || isNaN(n2)) return '<td>—</td>';
+                const diff = n1 - n2;
+                const sign = diff > 0 ? '+' : '';
+                const cls  = diff > 0 ? 'ww-delta-pos' : diff < 0 ? 'ww-delta-neg' : '';
+                return `<td class="${cls}">${sign}${smartRound(diff)}</td>`;
+            }).join('')}
+            <td>—</td>
+        </tr>`;
+    }
+
+    resultsEl.innerHTML = `
+        <div class="ww-title">
+            <span class="ww-p1">${p1Name}</span>
+            <span class="ww-vs">עם / בלי</span>
+            <span class="ww-p2">${p2Name}</span>
+        </div>
+        <div class="table-wrapper">
+            <table class="box-table show-separators ww-table">
+                <thead>
+                    <tr>
+                        <th class="player-name-cell">מצב</th>
+                        ${cols.map(c => `<th>${c}</th>`).join('')}
+                        <th>GP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${renderRow(`עם ${p2Name}`, withTotal, withRows.length, 'ww-row-with')}
+                    ${renderRow(`בלי ${p2Name}`, withoutTotal, withoutRows.length, 'ww-row-without')}
+                    ${renderDeltaRow(withTotal, withoutTotal)}
+                </tbody>
+            </table>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareElement(document.querySelector('#ww-results .table-wrapper'), 'with_without.png', this)">📷 שתף</button>
+        </div>`;
+
+    applyTableSeparators();
+}
+
+
 function loadHtml2Canvas() {
     return new Promise((resolve, reject) => {
         if (window.html2canvas) { resolve(); return; }
