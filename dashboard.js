@@ -448,6 +448,7 @@ function populateGames() {
 
                 <div class="box-score-container"
                      style="display:${isOpen ? 'block' : 'none'}; padding:20px; border-top:1px solid var(--border);">
+                    <div class="share-target">
                     <div class="table-wrapper">
                         <table class="box-table ${currentStatMode !== 'ADV' ? 'show-separators' : ''}">
                             <thead>
@@ -488,11 +489,13 @@ function populateGames() {
                                 </tr>` : ''}
                             </tfoot>` : ''}
                         </table>
-                    </div>
+                    </div><!-- /.table-wrapper -->
+                    </div><!-- /.share-target -->
 
                     <div style="margin-top:20px; display:flex; justify-content:center; gap:12px; border-top:1px dashed var(--border); padding-top:15px;">
                         ${rotationBtn(g.game_id)}
                         ${shotChartBtn(g.game_id)}
+                        <button class="share-btn" onclick="shareBoxScore('${g.game_id}', this)" title="שתף תוצאה">📷 שתף</button>
                     </div>
                 </div>
             </div>`;
@@ -573,6 +576,9 @@ function populatePlayers() {
                     `).join('')}
                 </tbody>
             </table>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareElement(this.closest('#players-container').querySelector('.table-wrapper'), 'players.png', this)">📷 שתף</button>
         </div>`;
 
     applyTableSeparators();
@@ -645,6 +651,9 @@ function populateTeams() {
                     </tr>` : ''}
                 </tbody>
             </table>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareElement(this.closest('#teams-container').querySelector('.table-wrapper'), 'teams.png', this)">📷 שתף</button>
         </div>`;
 
     applyTableSeparators();
@@ -712,7 +721,7 @@ function renderPlayerProfile() {
     const careerTable = `
         <div class="career-summary-card" style="background:var(--bg); padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:30px;">
             <h3 class="profile-table-title" style="margin-top:0;">ממוצעי קריירה</h3>
-            <div class="table-wrapper ${currentStatMode === 'ADV' ? 'width-fit' : ''}">
+            <div id="career-table-wrap" class="table-wrapper ${currentStatMode === 'ADV' ? 'width-fit' : ''}">
                 <table class="box-table ${currentStatMode === 'ADV' ? 'adv-separators' : 'show-separators'}">
                     <thead><tr>
                         <th>GP</th>
@@ -726,11 +735,14 @@ function renderPlayerProfile() {
                     </tbody>
                 </table>
             </div>
+            <div class="share-btn-row">
+                <button class="share-btn" onclick="shareElement(document.getElementById('career-table-wrap'), 'career.png', this)">📷 שתף</button>
+            </div>
         </div>`;
 
     const seasonTable = `
         <h3 class="profile-table-title">פירוט לפי עונות</h3>
-        <div class="table-wrapper ${currentStatMode === 'ADV' ? 'width-fit' : ''}">
+        <div id="seasons-table-wrap" class="table-wrapper ${currentStatMode === 'ADV' ? 'width-fit' : ''}">
             <table class="box-table ${currentStatMode === 'ADV' ? 'adv-separators' : 'show-separators'}">
                 <thead><tr>
                     <th onclick="setSort('season','prof-career',event)">עונה</th>
@@ -747,6 +759,9 @@ function renderPlayerProfile() {
                     `).join('')}
                 </tbody>
             </table>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareElement(document.getElementById('seasons-table-wrap'), 'seasons.png', this)">📷 שתף</button>
         </div>`;
 
     // Career highs (single-game bests) — exclude percentage columns
@@ -782,7 +797,7 @@ function renderPlayerProfile() {
 
     const highsTable = `
         <h3 class="profile-table-title" style="margin-top:40px;">שיאי עונה (במשחק בודד)</h3>
-        <div class="table-wrapper">
+        <div id="highs-table-wrap" class="table-wrapper">
             <table class="box-table show-separators">
                 <thead><tr>
                     <th>עונה</th>
@@ -790,6 +805,9 @@ function renderPlayerProfile() {
                 </tr></thead>
                 <tbody>${highsRows}</tbody>
             </table>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareElement(document.getElementById('highs-table-wrap'), 'highs.png', this)">📷 שתף</button>
         </div>`;
 
     container.innerHTML = modeToggle + careerTable + seasonTable + highsTable;
@@ -856,6 +874,9 @@ function renderProfileShotChart(pid, seasons) {
                 ${buildCourtSVG('psc-half-court')}
                 <div class="sc-badges" id="psc-badges"></div>
             </div>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareShotChart('psc-half-court','psc-badges','shotchart_profile.png',this)">📷 שתף</button>
         </div>`;
 
     container.appendChild(scSection);
@@ -1126,6 +1147,18 @@ function openRotationModal(gameId) {
 
     html += '</div></div></div>';
     content.innerHTML = html;
+
+    // Inject share button into modal header area
+    const closeBtn = modal.querySelector('.close-modal');
+    if (closeBtn && !modal.querySelector('.rotation-share-btn')) {
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'rotation-share-btn share-btn';
+        shareBtn.textContent = '📷';
+        shareBtn.title = 'שתף רוטציה';
+        shareBtn.onclick = function() { shareRotation(this); };
+        closeBtn.insertAdjacentElement('afterend', shareBtn);
+    }
+
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
 
@@ -1286,16 +1319,21 @@ function populateSeasonShotChart() {
     }).join('');
 
     container.innerHTML = `
-        <div class="ssc-layout">
-            <div class="ssc-court">
-                ${buildCourtSVG('ssc-half-court')}
-                <div class="sc-badges" id="ssc-badges"></div>
+        <div id="ssc-layout-wrap">
+            <div class="ssc-layout">
+                <div class="ssc-court">
+                    ${buildCourtSVG('ssc-half-court')}
+                    <div class="sc-badges" id="ssc-badges"></div>
+                </div>
+                <div class="ssc-panel">
+                    <button id="ssc-btn-all" class="sc-player-btn sc-all-btn ${scSeasonActivePlayers.size === allChars.size ? 'sc-btn-on' : ''}"
+                            onclick="sscToggleAll()">כולם</button>
+                    ${playerBtns}
+                </div>
             </div>
-            <div class="ssc-panel">
-                <button id="ssc-btn-all" class="sc-player-btn sc-all-btn ${scSeasonActivePlayers.size === allChars.size ? 'sc-btn-on' : ''}"
-                        onclick="sscToggleAll()">כולם</button>
-                ${playerBtns}
-            </div>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareShotChart('ssc-half-court','ssc-badges','shotchart_season.png',this)">📷 שתף</button>
         </div>`;
 
     // Store unified sc on window for toggle functions to access
@@ -1669,6 +1707,21 @@ function openShotChartModal(gameId) {
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
 
+    // Inject share button next to close button
+    requestAnimationFrame(() => {
+        const closeBtn = modal.querySelector('.sc-modal-close');
+        if (closeBtn && !modal.querySelector('.sc-share-btn')) {
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'sc-share-btn share-btn';
+            shareBtn.textContent = '📷';
+            shareBtn.title = 'שתף מפת זריקות';
+            shareBtn.onclick = function() {
+                shareShotChart('sc-half-court', 'sc-badges', `shotchart_game_${gameId}.png`, this);
+            };
+            closeBtn.insertAdjacentElement('afterend', shareBtn);
+        }
+    });
+
     requestAnimationFrame(() => {
         scUpdateCourt(sc);
         const panel = modal.querySelector('.sc-player-panel');
@@ -1691,4 +1744,272 @@ function closeShotChartModal() {
 
     // Also close on backdrop click
     modal.onclick = null;
+}
+
+/* =====================================================
+   Share / Screenshot helpers
+   ===================================================== */
+function loadHtml2Canvas() {
+    return new Promise((resolve, reject) => {
+        if (window.html2canvas) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s.onload  = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+/* -------------------------------------------------------
+   Shot-chart share: read live SVG state → draw to canvas
+   ------------------------------------------------------- */
+async function shareShotChart(svgId, badgesId, filename, activeBtn) {
+    if (activeBtn) { activeBtn.textContent = '...'; activeBtn.disabled = true; }
+
+    try {
+        const svg    = document.getElementById(svgId);
+        const badges = document.getElementById(badgesId);
+        if (!svg || !badges) throw new Error('elements not found');
+
+        // -- 1. Serialise the live SVG with inlined styles so CSS classes render in the blob
+        const svgClone = svg.cloneNode(true);
+        svgClone.style.transform = 'none';
+        svgClone.style.transformOrigin = '';
+
+        // Inline .sc-label styles so they survive serialisation (CSS classes don't travel with blobs)
+        // Also strip the rotate(90) transform that's for screen display — we rotate the whole canvas instead
+        svgClone.querySelectorAll('.sc-label').forEach(el => {
+            el.setAttribute('font-size', '90');
+            el.setAttribute('font-weight', '900');
+            el.setAttribute('fill', 'white');
+            el.setAttribute('stroke', 'black');
+            el.setAttribute('stroke-width', '12');
+            el.setAttribute('stroke-linejoin', 'round');
+            el.setAttribute('paint-order', 'stroke fill');
+            el.style.fontFamily = 'Arial, sans-serif';
+            // Keep rotate(90) — canvas is rotated -90° so net result is labels read correctly rotated 90° to the right
+        });
+
+        // The SVG natural coords are 2189 wide × 1827 tall (baseline on the RIGHT in SVG space)
+        // We want baseline on the LEFT → rotate 90° clockwise when drawing on canvas
+        // After 90° CW rotation: drawn width = SVG_H, drawn height = SVG_W
+        const SVG_W = 2189, SVG_H = 1827;
+        svgClone.setAttribute('width',   SVG_W);
+        svgClone.setAttribute('height',  SVG_H);
+        svgClone.setAttribute('viewBox', `0 0 ${SVG_W} ${SVG_H}`);
+
+        const serialised = new XMLSerializer().serializeToString(svgClone);
+        const svgBlob    = new Blob([serialised], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl     = URL.createObjectURL(svgBlob);
+
+        // -- 2. Collect badge data from live DOM
+        const badgeData = [];
+        badges.querySelectorAll('.sc-badge, .sc-badge-sm').forEach(b => {
+            badgeData.push({
+                label: b.querySelector('.sc-badge-label')?.textContent?.trim() || '',
+                stats: b.querySelector('.sc-badge-stats')?.textContent?.trim() || '',
+                pct:   b.querySelector('.sc-badge-pct')?.textContent?.trim()   || '',
+            });
+        });
+
+        // -- 3. Canvas layout
+        // After 90° CW rotation the court occupies: width=SVG_H*SCALE, height=SVG_W*SCALE
+        const SCALE     = 0.35;
+        const courtW    = Math.round(SVG_H * SCALE);   // rotated: H becomes width
+        const courtH    = Math.round(SVG_W * SCALE);   // rotated: W becomes height
+        const PAD       = 20;
+        const BADGE_W   = 170;
+        const BADGE_H   = 76;
+        const BADGE_GAP = 14;
+        const totalBadgeH = badgeData.length * (BADGE_H + BADGE_GAP) - BADGE_GAP;
+        const canvasW   = courtW + BADGE_W + PAD * 3;
+        const canvasH   = Math.max(courtH, totalBadgeH) + PAD * 2;
+
+        const canvas  = document.createElement('canvas');
+        canvas.width  = canvasW * 2;
+        canvas.height = canvasH * 2;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(2, 2);
+
+        // Background
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+
+        // -- 4. Draw SVG rotated 90° clockwise onto canvas
+        // 90° CW: translate to (courtW, 0), rotate π/2, draw at origin
+        await new Promise((res, rej) => {
+            const img = new Image();
+            img.onload = () => {
+                ctx.save();
+                // Rotate -90° (CCW): translate to (0, courtH), rotate -π/2
+                // This puts the SVG's right edge (baseline) on the left of the canvas
+                ctx.translate(PAD, PAD + courtH);
+                ctx.rotate(-Math.PI / 2);
+                ctx.drawImage(img, 0, 0, SVG_W * SCALE, SVG_H * SCALE);
+                ctx.restore();
+                URL.revokeObjectURL(svgUrl);
+                res();
+            };
+            img.onerror = rej;
+            img.src = svgUrl;
+        });
+
+        // -- 5. Draw badge panel to the right of the court
+        const panelX = PAD + courtW + PAD;
+        const startY = PAD + Math.max(0, (canvasH - PAD * 2 - totalBadgeH) / 2);
+
+        badgeData.forEach((b, i) => {
+            const bx = panelX;
+            const by = startY + i * (BADGE_H + BADGE_GAP);
+
+            // Badge background
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.roundRect(bx, by, BADGE_W, BADGE_H, 8);
+            ctx.fill();
+
+            // Label (small caps style)
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = `700 11px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.letterSpacing = '1px';
+            ctx.fillText(b.label, bx + BADGE_W / 2, by + 20);
+
+            // Stats (large)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `800 24px Arial, sans-serif`;
+            ctx.fillText(b.stats, bx + BADGE_W / 2, by + 46);
+
+            // Pct
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = `700 15px Arial, sans-serif`;
+            ctx.letterSpacing = '0px';
+            ctx.fillText(b.pct, bx + BADGE_W / 2, by + 66);
+        });
+
+        // -- 6. Share / download
+        canvas.toBlob(async blob => {
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: filename });
+            } else {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+            if (activeBtn) { activeBtn.textContent = '📷 שתף'; activeBtn.disabled = false; }
+        }, 'image/png');
+
+    } catch(e) {
+        console.error('shareShotChart failed', e);
+        if (activeBtn) { activeBtn.textContent = '📷 שתף'; activeBtn.disabled = false; }
+    }
+}
+
+async function shareElement(el, filename, activeBtn) {
+    if (activeBtn) { activeBtn.textContent = '...'; activeBtn.disabled = true; }
+
+    try {
+        await loadHtml2Canvas();
+
+        // Measure full content size before cloning
+        const fullW = el.scrollWidth;
+        const fullH = el.scrollHeight;
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+            position: fixed;
+            top: -99999px;
+            left: -99999px;
+            width: ${fullW}px;
+            background: #ffffff;
+            padding: 16px;
+            z-index: -1;
+            direction: rtl;
+            box-sizing: content-box;
+        `;
+        const clone = el.cloneNode(true);
+        clone.style.overflow  = 'visible';
+        clone.style.overflowX = 'visible';
+        clone.style.overflowY = 'visible';
+        clone.style.maxHeight = 'none';
+        clone.style.maxWidth  = 'none';
+        clone.style.height    = 'auto';
+        clone.style.width     = fullW + 'px';
+
+        // Fix all inner scrollable elements (e.g. table-wrapper overflow-x:auto)
+        clone.querySelectorAll('*').forEach(node => {
+            const cs = window.getComputedStyle(node);
+            if (cs.overflow === 'auto' || cs.overflow === 'scroll' ||
+                cs.overflowX === 'auto' || cs.overflowX === 'scroll' ||
+                cs.overflowY === 'auto' || cs.overflowY === 'scroll') {
+                node.style.overflow  = 'visible';
+                node.style.overflowX = 'visible';
+                node.style.overflowY = 'visible';
+                // Expand to full scroll size
+                if (node.scrollWidth > node.clientWidth)  node.style.width  = node.scrollWidth  + 'px';
+                if (node.scrollHeight > node.clientHeight) node.style.height = node.scrollHeight + 'px';
+            }
+        });
+
+        // Counter-rotate any court SVGs so they appear upright in the image
+        clone.querySelectorAll('.sc-court-svg').forEach(svg => {
+            svg.style.transform       = 'none';
+            svg.style.transformOrigin = '';
+        });
+
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        // Let the browser lay out the clone before measuring
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        const canvas = await html2canvas(wrapper, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            width:  wrapper.scrollWidth,
+            height: wrapper.scrollHeight,
+            windowWidth:  wrapper.scrollWidth,
+            windowHeight: wrapper.scrollHeight,
+        });
+
+        document.body.removeChild(wrapper);
+
+        canvas.toBlob(async blob => {
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: filename });
+            } else {
+                const a = document.createElement('a');
+                a.href  = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+            if (activeBtn) { activeBtn.textContent = '📷 שתף'; activeBtn.disabled = false; }
+        }, 'image/png');
+    } catch(e) {
+        console.error('share failed', e);
+        if (activeBtn) { activeBtn.textContent = '📷 שתף'; activeBtn.disabled = false; }
+    }
+}
+
+function shareBoxScore(gameId, btn) {
+    const card = document.querySelector(`.game-card[data-card-id="${gameId}"]`);
+    if (!card) return;
+    const target = card.querySelector('.share-target');
+    if (!target) return;
+    const game = data.games.find(g => String(g.game_id) === String(gameId));
+    const name = game ? `${game.opponent}_${game.date}` : `game_${gameId}`;
+    shareElement(target, `boxscore_${name}.png`, btn);
+}
+
+function shareRotation(btn) {
+    const content = document.getElementById('rotation-content');
+    if (!content) return;
+    shareElement(content, `rotation.png`, btn);
 }
