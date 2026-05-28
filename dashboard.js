@@ -10,6 +10,7 @@ let currentStatMode  = 'AVG';
 let isAdvancedMode   = false;
 let sortConfig       = { key: null, direction: 'desc', tableId: null };
 let openBoxScores    = new Set();
+let shareMode        = false;
 
 // Our team name per game_id — built once after load (we are always listed first in teams_stats)
 const MY_TEAM_BY_GAME = {};
@@ -36,7 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
 });
 
-function toggleSidebar() { document.body.classList.toggle('sidebar-closed'); }
+function toggleShareMode(btn) {
+    shareMode = !shareMode;
+    document.body.classList.toggle('share-mode', shareMode);
+
+    const seasonBtn = document.getElementById('season-share-btn');
+    if (seasonBtn) seasonBtn.style.display = shareMode ? 'inline-flex' : 'none';
+    document.querySelectorAll('#share-mode-toggle').forEach(b => {
+        b.classList.toggle('active', shareMode);
+        b.textContent = shareMode ? '✕ סגור שיתוף' : '📷 מצב שיתוף';
+    });
+}
+
+
 
 /* =====================================================
    Navigation — only re-render the section we're going to
@@ -404,6 +417,8 @@ function populateGames() {
     const seasonShareBtn = `
         <button class="share-btn season-share-btn" onclick="shareSeasonBoxScores(this)" title="שתף כל המשחקים">📷 כל העונה</button>`;
 
+
+
     const cards = filtered.map(g => {
         const isActive = activeGameIds.has(String(g.game_id));
         const isOpen   = openBoxScores.has(String(g.game_id));
@@ -498,15 +513,25 @@ function populateGames() {
                     <div style="margin-top:20px; display:flex; justify-content:center; gap:12px; border-top:1px dashed var(--border); padding-top:15px;">
                         ${rotationBtn(g.game_id)}
                         ${shotChartBtn(g.game_id)}
-                        <button class="share-btn" onclick="shareBoxScore('${g.game_id}', this)" title="שתף תוצאה">📷 שתף</button>
+                        <span class="share-btn-row" style="margin:0;">
+                            <button class="share-btn" onclick="shareBoxScore('${g.game_id}', this)" title="שתף תוצאה">📷 שתף</button>
+                        </span>
                     </div>
                 </div>
             </div>`;
     }).join('');
 
     container.innerHTML = `
-        <div class="games-controls-row">${advBtn}${recordHtml}${seasonShareBtn}</div>
-        ${cards}`;
+        <div class="games-controls-row">${advBtn}${recordHtml}</div>
+        ${cards}
+        <div style="display:flex; justify-content:center; padding:20px 0 40px; gap:12px; flex-wrap:wrap;">
+            <button class="share-btn season-share-btn ${shareMode ? '' : ''}" id="season-share-btn"
+                style="display:${shareMode ? 'inline-flex' : 'none'}; align-items:center;"
+                onclick="shareSeasonBoxScores(this)">📷 כל העונה</button>
+            <button class="adv-toggle-btn ${shareMode ? 'active' : ''}" id="share-mode-toggle" onclick="toggleShareMode(this)">
+                ${shareMode ? '✕ סגור שיתוף' : '📷 מצב שיתוף'}
+            </button>
+        </div>`;
 }
 
 /* =====================================================
@@ -1151,15 +1176,15 @@ function openRotationModal(gameId) {
     html += '</div></div></div>';
     content.innerHTML = html;
 
-    // Inject share button into modal header area
     const closeBtn = modal.querySelector('.close-modal');
     if (closeBtn && !modal.querySelector('.rotation-share-btn')) {
         const shareBtn = document.createElement('button');
         shareBtn.className = 'rotation-share-btn share-btn';
+        shareBtn.style.cssText = 'position:absolute; left:58px; top:12px; z-index:10; font-size:1rem; padding:4px 8px;';
         shareBtn.textContent = '📷';
         shareBtn.title = 'שתף רוטציה';
         shareBtn.onclick = function() { shareRotation(this); };
-        closeBtn.insertAdjacentElement('afterend', shareBtn);
+        closeBtn.insertAdjacentElement('beforebegin', shareBtn);
     }
 
     modal.style.display = 'block';
@@ -1716,12 +1741,13 @@ function openShotChartModal(gameId) {
         if (closeBtn && !modal.querySelector('.sc-share-btn')) {
             const shareBtn = document.createElement('button');
             shareBtn.className = 'sc-share-btn share-btn';
+            shareBtn.style.cssText = 'position:absolute; left:62px; top:10px; z-index:10; font-size:1rem; padding:4px 8px;';
             shareBtn.textContent = '📷';
             shareBtn.title = 'שתף מפת זריקות';
             shareBtn.onclick = function() {
                 shareShotChart('sc-half-court', 'sc-badges', `shotchart_game_${gameId}.png`, this);
             };
-            closeBtn.insertAdjacentElement('afterend', shareBtn);
+            closeBtn.insertAdjacentElement('beforebegin', shareBtn);
         }
     });
 
@@ -2019,6 +2045,16 @@ async function shareSeasonBoxScores(btn) {
     if (!filtered.length) return;
     await loadHtml2Canvas();
 
+    // Load JSZip
+    await new Promise((resolve, reject) => {
+        if (window.JSZip) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+    });
+
+    const zip = new JSZip();
     const total = filtered.length;
     btn.disabled = true;
 
@@ -2027,7 +2063,7 @@ async function shareSeasonBoxScores(btn) {
         btn.textContent = `📷 ${i + 1}/${total}`;
 
         const pStats = data.playersStats.filter(s => String(s.game_id) === String(g.game_id));
-        if (!pStats.length) continue;  // skip only if truly no data
+        if (!pStats.length) continue;
         const myTeamName = myTeamForGame(g.game_id);
         const myT        = data.teamStats.find(t => String(t.game_id) === String(g.game_id) && t['team name'] === myTeamName);
         const oppT       = data.teamStats.find(t => String(t.game_id) === String(g.game_id) && t['team name'] !== myTeamName);
@@ -2040,11 +2076,9 @@ async function shareSeasonBoxScores(btn) {
         const myName     = myT ? myT['team name'] : myTeamName || 'הקבוצה שלי';
         const weWin      = Number(g.T_score) > Number(g.O_score);
 
-        // Build a standalone share-target element offscreen
         const wrapper = document.createElement('div');
         wrapper.style.cssText = `position:fixed; top:-99999px; left:-99999px; background:#fff; padding:16px; direction:rtl; font-family:'Assistant',sans-serif;`;
 
-        // Game header
         const header = document.createElement('div');
         header.style.cssText = `display:flex; gap:20px; align-items:center; margin-bottom:12px; font-size:15px;`;
         header.innerHTML = `
@@ -2055,7 +2089,6 @@ async function shareSeasonBoxScores(btn) {
             <div style="color:#64748b; font-size:13px;">${g.date}</div>`;
         wrapper.appendChild(header);
 
-        // Table
         const tableWrap = document.createElement('div');
         tableWrap.style.cssText = `overflow:visible; border-radius:8px; border:1px solid #e2e8f0; background:white;`;
         tableWrap.innerHTML = `
@@ -2098,31 +2131,30 @@ async function shareSeasonBoxScores(btn) {
         await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
         const canvas = await html2canvas(wrapper, {
-            backgroundColor: '#ffffff',
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            width:  wrapper.scrollWidth,
-            height: wrapper.scrollHeight,
-            windowWidth:  wrapper.scrollWidth,
-            windowHeight: wrapper.scrollHeight,
+            backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false,
+            width: wrapper.scrollWidth, height: wrapper.scrollHeight,
+            windowWidth: wrapper.scrollWidth, windowHeight: wrapper.scrollHeight,
         });
-
         document.body.removeChild(wrapper);
 
-        const name = `${g.opponent}_${g.date}`.replace(/\//g, '-');
-        await new Promise(res => {
-            canvas.toBlob(blob => {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `boxscore_${name}.png`;
-                a.click();
-                setTimeout(() => { URL.revokeObjectURL(a.href); res(); }, 300);
-            }, 'image/png');
-        });
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        const name = `${String(i+1).padStart(2,'0')}_${g.opponent}_${g.date}`.replace(/\//g, '-');
+        zip.file(`${name}.png`, blob);
+    }
 
-        // Small delay between downloads so browser doesn't block them
-        await new Promise(r => setTimeout(r, 400));
+    btn.textContent = '📦 אורז...';
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const seasonName = currentSeason ? String(currentSeason).replace(/\//g, '-') : 'season';
+    const zipFile = new File([zipBlob], `boxscores_${seasonName}.zip`, { type: 'application/zip' });
+
+    if (navigator.canShare && navigator.canShare({ files: [zipFile] })) {
+        await navigator.share({ files: [zipFile], title: `Box Scores ${seasonName}` });
+    } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = `boxscores_${seasonName}.zip`;
+        a.click();
+        URL.revokeObjectURL(a.href);
     }
 
     btn.textContent = '📷 כל העונה';

@@ -131,6 +131,17 @@ body.mode-adv .player-name-cell {
 .share-btn-wrap { display: flex; align-items: center; margin-left: 8px; }
 
 .share-btn-row {
+    display: none;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+body.share-mode .share-btn-row { display: flex; }
+
+.season-share-btn {
+    margin-right: auto;
+}
     display: flex;
     justify-content: center;
     margin-top: 10px;
@@ -139,17 +150,24 @@ body.mode-adv .player-name-cell {
 
 .rotation-share-btn {
     position: absolute;
-    left: 56px;
-    top: 15px;
+    left: 58px;
+    top: 12px;
     z-index: 10;
+    display: none;
+    font-size: 1rem;
+    padding: 4px 8px;
 }
 
 .sc-share-btn {
     position: absolute;
-    left: 56px;
-    top: 15px;
+    left: 62px;
+    top: 10px;
     z-index: 10;
+    display: none;
 }
+
+body.share-mode .rotation-share-btn,
+body.share-mode .sc-share-btn { display: inline-block; }
 .season-filters-container {
   display: flex;
   flex-wrap: wrap;
