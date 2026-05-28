@@ -401,6 +401,9 @@ function populateGames() {
             <span>ADV</span>
         </button>`;
 
+    const seasonShareBtn = `
+        <button class="share-btn season-share-btn" onclick="shareSeasonBoxScores(this)" title="שתף כל המשחקים">📷 כל העונה</button>`;
+
     const cards = filtered.map(g => {
         const isActive = activeGameIds.has(String(g.game_id));
         const isOpen   = openBoxScores.has(String(g.game_id));
@@ -502,7 +505,7 @@ function populateGames() {
     }).join('');
 
     container.innerHTML = `
-        <div class="games-controls-row">${advBtn}${recordHtml}</div>
+        <div class="games-controls-row">${advBtn}${recordHtml}${seasonShareBtn}</div>
         ${cards}`;
 }
 
@@ -2006,6 +2009,124 @@ function shareBoxScore(gameId, btn) {
     const game = data.games.find(g => String(g.game_id) === String(gameId));
     const name = game ? `${game.opponent}_${game.date}` : `game_${gameId}`;
     shareElement(target, `boxscore_${name}.png`, btn);
+}
+
+async function shareSeasonBoxScores(btn) {
+    const filtered = data.games
+        .filter(g => String(g.season) === String(currentSeason) && activeGameIds.has(String(g.game_id)))
+        .sort((a, b) => getTimestamp(a.date) - getTimestamp(b.date));
+
+    if (!filtered.length) return;
+    await loadHtml2Canvas();
+
+    const total = filtered.length;
+    btn.disabled = true;
+
+    for (let i = 0; i < filtered.length; i++) {
+        const g = filtered[i];
+        btn.textContent = `📷 ${i + 1}/${total}`;
+
+        const pStats = data.playersStats.filter(s => String(s.game_id) === String(g.game_id));
+        if (!pStats.length) continue;  // skip only if truly no data
+        const myTeamName = myTeamForGame(g.game_id);
+        const myT        = data.teamStats.find(t => String(t.game_id) === String(g.game_id) && t['team name'] === myTeamName);
+        const oppT       = data.teamStats.find(t => String(t.game_id) === String(g.game_id) && t['team name'] !== myTeamName);
+        const cols       = isAdvancedMode
+            ? ['MIN','eFG%','TS%','AST/TO','ORB%','DRB%']
+            : Object.keys(pStats[0] || {}).filter(k => !ALWAYS_HIDDEN.includes(k) && k !== 'starter');
+        const teamTotal  = { gp: 1 };
+        pStats.forEach(s => cols.forEach(c => { if (!isNaN(s[c])) teamTotal[c] = (teamTotal[c] || 0) + Number(s[c]); }));
+        const fdIndex    = cols.indexOf('FD');
+        const myName     = myT ? myT['team name'] : myTeamName || 'הקבוצה שלי';
+        const weWin      = Number(g.T_score) > Number(g.O_score);
+
+        // Build a standalone share-target element offscreen
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `position:fixed; top:-99999px; left:-99999px; background:#fff; padding:16px; direction:rtl; font-family:'Assistant',sans-serif;`;
+
+        // Game header
+        const header = document.createElement('div');
+        header.style.cssText = `display:flex; gap:20px; align-items:center; margin-bottom:12px; font-size:15px;`;
+        header.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="padding:2px 8px;border-radius:4px;font-weight:800;${!weWin ? 'background:#fef2f2;color:#dc2626;' : ''}">${g.opponent} ${g.O_score}</div>
+                <div style="padding:2px 8px;border-radius:4px;font-weight:800;${weWin ? 'background:#f0fdf4;color:#1f8847;' : ''}">${myName} ${g.T_score}</div>
+            </div>
+            <div style="color:#64748b; font-size:13px;">${g.date}</div>`;
+        wrapper.appendChild(header);
+
+        // Table
+        const tableWrap = document.createElement('div');
+        tableWrap.style.cssText = `overflow:visible; border-radius:8px; border:1px solid #e2e8f0; background:white;`;
+        tableWrap.innerHTML = `
+            <table style="border-collapse:separate;border-spacing:0;width:100%;font-size:0.85rem;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:10px 12px;border-bottom:2px solid #e2e8f0;text-align:right;font-weight:800;white-space:nowrap;">שחקן</th>
+                        ${cols.map(c => `<th style="padding:10px 8px;border-bottom:2px solid #e2e8f0;text-align:center;">${c}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${pStats.map(s => {
+                        const name  = data.players[s.player_id]?.Name || '??';
+                        const label = Number(s.starter) ? name + '*' : name;
+                        return `<tr>
+                            <td style="padding:8px 12px;text-align:right;font-weight:800;border-bottom:1px solid #f1f5f9;white-space:nowrap;border-left:3px solid #64748b;">${label}</td>
+                            ${cols.map(c => `<td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">${smartRound(isAdvancedMode ? calculateAdvanced(s)[c] : s[c])}</td>`).join('')}
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+                ${!isAdvancedMode ? `
+                <tfoot>
+                    <tr style="font-weight:800;background:#f8fafc;">
+                        <td style="padding:8px 12px;text-align:right;border-left:3px solid #64748b;">סה"כ קבוצה</td>
+                        ${cols.map((c, idx) => `<td style="padding:8px;text-align:center;">${fdIndex !== -1 && idx > fdIndex ? '-' : smartRound(getCellValue(teamTotal, c, 'TOT'))}</td>`).join('')}
+                    </tr>
+                    ${oppT ? `<tr style="color:#64748b;font-style:italic;">
+                        <td style="padding:8px 12px;text-align:right;border-left:3px solid #64748b;">סה"כ יריבה</td>
+                        ${cols.map((c, idx) => {
+                            if (fdIndex !== -1 && idx > fdIndex) return `<td style="padding:8px;text-align:center;">-</td>`;
+                            const isPercent = c.includes('%') || ['2P%','3P%','FG%','FT%'].includes(c);
+                            return `<td style="padding:8px;text-align:center;">${smartRound(oppT[c] || 0)}${isPercent ? '%' : ''}</td>`;
+                        }).join('')}
+                    </tr>` : ''}
+                </tfoot>` : ''}
+            </table>`;
+        wrapper.appendChild(tableWrap);
+        document.body.appendChild(wrapper);
+
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        const canvas = await html2canvas(wrapper, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            width:  wrapper.scrollWidth,
+            height: wrapper.scrollHeight,
+            windowWidth:  wrapper.scrollWidth,
+            windowHeight: wrapper.scrollHeight,
+        });
+
+        document.body.removeChild(wrapper);
+
+        const name = `${g.opponent}_${g.date}`.replace(/\//g, '-');
+        await new Promise(res => {
+            canvas.toBlob(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `boxscore_${name}.png`;
+                a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); res(); }, 300);
+            }, 'image/png');
+        });
+
+        // Small delay between downloads so browser doesn't block them
+        await new Promise(r => setTimeout(r, 400));
+    }
+
+    btn.textContent = '📷 כל העונה';
+    btn.disabled = false;
 }
 
 function shareRotation(btn) {
