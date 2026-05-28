@@ -977,15 +977,11 @@ function pscUpdateCourt() {
             const isPortraitMobile  = window.innerWidth <= 768 && window.innerWidth <= window.innerHeight;
             if (isLandscapeMobile) {
                 badgesEl.style.top   = (svgRect.top - areaRect.top) + 'px';
-                badgesEl.style.left  = (svgRect.right - areaRect.left + 8) + 'px';
+                badgesEl.style.left  = (svgRect.right - areaRect.left - window.innerWidth * 0.08) + 'px';
                 badgesEl.style.right = 'auto';
-            } else if (isPortraitMobile) {
-                badgesEl.style.top   = (svgRect.top - areaRect.top) + 'px';
-                badgesEl.style.right = '4px';
-                badgesEl.style.left  = 'auto';
             } else {
                 badgesEl.style.top   = (svgRect.top - areaRect.top + 8) + 'px';
-                badgesEl.style.right = '8px';
+                badgesEl.style.right = Math.max(0, areaRect.right - svgRect.right) + 'px';
                 badgesEl.style.left  = 'auto';
             }
         });
@@ -1390,18 +1386,17 @@ function sscUpdateCourt() {
             </div>`;
         }).join('');
 
-        // Align badge top with SVG's rendered top edge
+        // Align badge column with SVG's right edge
         requestAnimationFrame(() => {
             const svgRect  = svg.getBoundingClientRect();
             const areaRect = badgesEl.parentElement.getBoundingClientRect();
             const isLandscapeMobile = window.innerWidth <= 768 && window.innerWidth > window.innerHeight;
+            badgesEl.style.top = (svgRect.top - areaRect.top + 12) + 'px';
             if (isLandscapeMobile) {
-                badgesEl.style.top   = (svgRect.top - areaRect.top) + 'px';
-                badgesEl.style.left  = (svgRect.right - areaRect.left + 8) + 'px';
+                badgesEl.style.left  = (svgRect.right - areaRect.left - window.innerWidth * 0.08) + 'px';
                 badgesEl.style.right = 'auto';
             } else {
-                badgesEl.style.top   = (svgRect.top - areaRect.top + 12) + 'px';
-                badgesEl.style.right = '8px';
+                badgesEl.style.right = Math.max(0, areaRect.right - svgRect.right) + 'px';
                 badgesEl.style.left  = 'auto';
             }
         });
@@ -1538,17 +1533,17 @@ function scUpdateCourt(sc) {
         </div>`;
     }).join('');
 
-    // Align badge column top with SVG's rendered top edge
+    // Align badge column with SVG's right edge
     requestAnimationFrame(() => {
         const svgRect  = svg.getBoundingClientRect();
         const areaRect = badgesEl.parentElement.getBoundingClientRect();
-        badgesEl.style.top = (svgRect.top - areaRect.top + 12) + 'px';
         const isLandscapeMobile = window.innerWidth <= 768 && window.innerWidth > window.innerHeight;
+        badgesEl.style.top = (svgRect.top - areaRect.top + 12) + 'px';
         if (isLandscapeMobile) {
-            badgesEl.style.left  = (svgRect.right - areaRect.left + 8) + 'px';
+            badgesEl.style.left  = (svgRect.right - areaRect.left - window.innerWidth * 0.1) + 'px';
             badgesEl.style.right = 'auto';
         } else {
-            badgesEl.style.right = '8px';
+            badgesEl.style.right = Math.max(0, areaRect.right - svgRect.right) + 'px';
             badgesEl.style.left  = 'auto';
         }
     });

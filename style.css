@@ -670,24 +670,30 @@ input:checked + .slider:before { transform: translateX(16px); }
     backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 9px;
-    padding: clamp(6px, 1.2vh, 14px) clamp(8px, 1.5vw, 20px);
-    min-width: clamp(60px, 8vw, 120px);
+    padding: 0.9vh 1.1vw;
+    min-width: 6vw;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.6);
 }
-.sc-badge-label { display: block; font-size: clamp(9px, 1.4vw, 22px); color: #aaa; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
-.sc-badge-stats { display: block; font-size: clamp(13px, 2.2vw, 36px); font-weight: 800; color: white; line-height: 1.2; }
-.sc-badge-pct   { display: block; font-size: clamp(11px, 1.8vw, 30px); font-weight: 700; color: #ffffff; margin-top: 1px; }
+.sc-badge-label { display: block; font-size: 1.58vw; color: #aaa; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.2vh; }
+.sc-badge-stats { display: block; font-size: 2.48vw; font-weight: 800; color: white; line-height: 1.2; }
+.sc-badge-pct   { display: block; font-size: 2.03vw; font-weight: 700; color: #ffffff; margin-top: 0.1vh; }
 
-/* Smaller badges for player profile shot chart */
+/* Smaller badges for player profile shot chart — same size as season shotchart page */
 .sc-badge.sc-badge-sm {
-    padding: clamp(5px, 1vh, 12px) clamp(6px, 1.2vw, 16px);
-    min-width: clamp(55px, 7vw, 110px);
+    padding: 0.72vh 0.88vw;
+    min-width: 4.8vw;
     border-radius: 7px;
 }
-.sc-badge.sc-badge-sm .sc-badge-label { font-size: clamp(8px, 1.2vw, 20px); margin-bottom: 2px; }
-.sc-badge.sc-badge-sm .sc-badge-stats { font-size: clamp(12px, 2vw, 32px); }
-.sc-badge.sc-badge-sm .sc-badge-pct   { font-size: clamp(10px, 1.6vw, 26px); margin-top: 1px; }
+.sc-badge.sc-badge-sm .sc-badge-label { font-size: 1.26vw; margin-bottom: 0.2vh; }
+.sc-badge.sc-badge-sm .sc-badge-stats { font-size: 1.98vw; }
+.sc-badge.sc-badge-sm .sc-badge-pct   { font-size: 1.62vw; margin-top: 0.1vh; }
+
+/* Season shot chart page: same as sc-badge-sm (no separate override needed) */
+#sec-season-shotchart .sc-badge { padding: 0.72vh 0.88vw; min-width: 4.8vw; }
+#sec-season-shotchart .sc-badge-label { font-size: 1.26vw; }
+#sec-season-shotchart .sc-badge-stats { font-size: 1.98vw; }
+#sec-season-shotchart .sc-badge-pct   { font-size: 1.62vw; }
 /* =====================================================
    Dedicated Shot Chart Modal
    ===================================================== */
@@ -779,20 +785,26 @@ input:checked + .slider:before { transform: translateX(16px); }
     }
     .sc-court-area { flex: 1; min-height: 0; }
     .sc-court-svg { height: 100%; max-height: 100%; }
-    .sc-badges { top: 8px; right: 4px; left: auto; }
-    .sc-badge { padding: clamp(3px, 1vw, 8px) clamp(5px, 1.5vw, 10px); min-width: clamp(44px, 10vw, 70px); }
-    .sc-badge-label { font-size: clamp(8px, 2vw, 12px); }
-    .sc-badge-stats { font-size: clamp(11px, 3vw, 18px); }
-    .sc-badge-pct   { font-size: clamp(9px, 2.5vw, 15px); }
+    .sc-badges { top: 1vw; right: 0; left: auto; }
+    .sc-badge { padding: 1.5vw 2vw; min-width: 14vw; }
+    .sc-badge-label { font-size: 2.8vw; }
+    .sc-badge-stats { font-size: 4.2vw; }
+    .sc-badge-pct   { font-size: 3.5vw; }
+    /* Season shotchart page matches modal badge size */
+    #sec-season-shotchart .sc-badge { padding: 1.5vw 2vw; min-width: 14vw; }
+    #sec-season-shotchart .sc-badge-label { font-size: 2.8vw; }
+    #sec-season-shotchart .sc-badge-stats { font-size: 4.2vw; }
+    #sec-season-shotchart .sc-badge-pct   { font-size: 3.5vw; }
 }
 
 /* Landscape mobile: panel on right as vertical scrollable list */
+/* In landscape the height is the limiting dimension (~390px), so use vh */
 @media (max-width: 768px) and (orientation: landscape) {
     .sc-modal-inner { height: 100dvh; }
     .sc-body { flex-direction: row; overflow: hidden; }
     .sc-player-panel {
-        width: 100px;
-        min-width: 100px;
+        width: 18vh;
+        min-width: 18vh;
         height: 100%;
         overflow-y: auto;
         overflow-x: hidden;
@@ -801,15 +813,15 @@ input:checked + .slider:before { transform: translateX(16px); }
         flex-wrap: nowrap;
         border-left: 1px solid #333;
         border-bottom: none;
-        padding: 8px 4px;
-        gap: 4px;
+        padding: 1vh 1vh;
+        gap: 0.5vh;
         justify-content: flex-start;
         align-items: stretch;
     }
     .sc-player-btn,
     .sc-all-btn {
-        font-size: 0.8rem;
-        padding: 8px 4px;
+        font-size: 2.2vh;
+        padding: 1vh 0.8vh;
         width: 100% !important;
         white-space: nowrap;
         flex-shrink: 0;
@@ -818,16 +830,16 @@ input:checked + .slider:before { transform: translateX(16px); }
     }
     .sc-court-area { flex: 1; min-width: 0; overflow: hidden; }
     .sc-court-svg { height: 100%; max-height: 100%; }
-    .sc-badges { top: 4px; left: 4px; right: auto; gap: 3px; }
+    .sc-badges { top: 1vh; left: 1vh; right: auto; gap: 0.5vh; }
     .sc-badge {
-        padding: clamp(3px, 0.8vh, 8px) clamp(5px, 1vw, 10px) !important;
-        min-width: clamp(55px, 8vw, 80px) !important;
-        max-width: clamp(55px, 8vw, 80px) !important;
+        padding: 1.15vh 1.44vh !important;
+        min-width: 17.28vh !important;
+        max-width: unset !important;
         border-radius: 5px;
     }
-    .sc-badge-label { font-size: clamp(8px, 1.5vw, 11px) !important; margin-bottom: 1px; }
-    .sc-badge-stats { font-size: clamp(11px, 2vw, 16px) !important; line-height: 1.1; }
-    .sc-badge-pct   { font-size: clamp(9px, 1.8vw, 13px) !important; margin-top: 0; }
+    .sc-badge-label { font-size: 2.59vh !important; margin-bottom: 0.1vh; }
+    .sc-badge-stats { font-size: 4.03vh !important; line-height: 1.1; }
+    .sc-badge-pct   { font-size: 3.17vh !important; margin-top: 0; }
 }
 
 /* =====================================================
@@ -1106,13 +1118,13 @@ input:checked + .slider:before { transform: translateX(16px); }
         position: relative;
     }
     .sc-badge.sc-badge-sm {
-        padding: clamp(3px, 1vw, 6px) clamp(4px, 1.5vw, 8px) !important;
-        min-width: clamp(44px, 10vw, 65px) !important;
-        max-width: clamp(44px, 10vw, 65px) !important;
+        padding: 1.62vw 2.16vw !important;
+        min-width: 15.12vw !important;
+        max-width: unset !important;
     }
-    .sc-badge.sc-badge-sm .sc-badge-label { font-size: clamp(7px, 2vw, 11px) !important; }
-    .sc-badge.sc-badge-sm .sc-badge-stats { font-size: clamp(10px, 3vw, 16px) !important; }
-    .sc-badge.sc-badge-sm .sc-badge-pct   { font-size: clamp(8px, 2.5vw, 13px) !important; }
+    .sc-badge.sc-badge-sm .sc-badge-label { font-size: 3.02vw !important; }
+    .sc-badge.sc-badge-sm .sc-badge-stats { font-size: 4.54vw !important; }
+    .sc-badge.sc-badge-sm .sc-badge-pct   { font-size: 3.78vw !important; }
 }
 
 /* Player Profile Shot Chart — Mobile Landscape */
@@ -1131,4 +1143,12 @@ input:checked + .slider:before { transform: translateX(16px); }
         width: auto;
         aspect-ratio: 1827 / 2189;
     }
+    .sc-badge.sc-badge-sm {
+        padding: 1.01vh 1.3vh !important;
+        min-width: 11vh !important;
+        max-width: unset !important;
+    }
+    .sc-badge.sc-badge-sm .sc-badge-label { font-size: 2.3vh !important; }
+    .sc-badge.sc-badge-sm .sc-badge-stats { font-size: 3.6vh !important; }
+    .sc-badge.sc-badge-sm .sc-badge-pct   { font-size: 2.88vh !important; }
 }
