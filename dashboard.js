@@ -1943,20 +1943,22 @@ async function shareElement(el, filename, activeBtn) {
     try {
         await loadHtml2Canvas();
 
-        // Measure full content size before cloning
-        const fullW = el.scrollWidth;
-        const fullH = el.scrollHeight;
+        // Measure the inner table's full size (not the scrollable wrapper's visible size)
+        const innerTable = el.querySelector('table') || el;
+        const fullW = innerTable.scrollWidth;
+        const fullH = innerTable.scrollHeight;
 
         const wrapper = document.createElement('div');
         wrapper.style.cssText = `
             position: fixed;
             top: -99999px;
             left: -99999px;
-            width: ${fullW}px;
+            width: ${fullW + 32}px;
             background: #ffffff;
             padding: 16px;
             z-index: -1;
             direction: rtl;
+            writing-mode: horizontal-tb;
             box-sizing: content-box;
         `;
         const clone = el.cloneNode(true);
@@ -1966,24 +1968,28 @@ async function shareElement(el, filename, activeBtn) {
         clone.style.maxHeight = 'none';
         clone.style.maxWidth  = 'none';
         clone.style.height    = 'auto';
-        clone.style.width     = fullW + 'px';
+        clone.style.width     = 'auto';
 
-        // Fix all inner scrollable elements (e.g. table-wrapper overflow-x:auto)
+        // Fix all inner scrollable elements
         clone.querySelectorAll('*').forEach(node => {
-            const cs = window.getComputedStyle(node);
-            if (cs.overflow === 'auto' || cs.overflow === 'scroll' ||
-                cs.overflowX === 'auto' || cs.overflowX === 'scroll' ||
-                cs.overflowY === 'auto' || cs.overflowY === 'scroll') {
-                node.style.overflow  = 'visible';
-                node.style.overflowX = 'visible';
-                node.style.overflowY = 'visible';
-                // Expand to full scroll size
-                if (node.scrollWidth > node.clientWidth)  node.style.width  = node.scrollWidth  + 'px';
-                if (node.scrollHeight > node.clientHeight) node.style.height = node.scrollHeight + 'px';
+            node.style.overflow  = 'visible';
+            node.style.overflowX = 'visible';
+            node.style.overflowY = 'visible';
+            node.style.maxHeight = 'none';
+            node.style.maxWidth  = 'none';
+            // Strip sticky positioning — breaks layout when off-screen
+            if (node.style.position === 'sticky' ||
+                window.getComputedStyle(node).position === 'sticky') {
+                node.style.position = 'static';
             }
         });
 
-        // Counter-rotate any court SVGs so they appear upright in the image
+        // Also strip sticky from th/td with player-name-cell class
+        clone.querySelectorAll('.player-name-cell, th, td').forEach(node => {
+            node.style.position = 'static';
+        });
+
+        // Counter-rotate any court SVGs
         clone.querySelectorAll('.sc-court-svg').forEach(svg => {
             svg.style.transform       = 'none';
             svg.style.transformOrigin = '';
@@ -1992,7 +1998,6 @@ async function shareElement(el, filename, activeBtn) {
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
 
-        // Let the browser lay out the clone before measuring
         await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
         const canvas = await html2canvas(wrapper, {
@@ -2077,7 +2082,7 @@ async function shareSeasonBoxScores(btn) {
         const weWin      = Number(g.T_score) > Number(g.O_score);
 
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = `position:fixed; top:-99999px; left:-99999px; background:#fff; padding:16px; direction:rtl; font-family:'Assistant',sans-serif;`;
+        wrapper.style.cssText = `position:fixed; top:-99999px; left:-99999px; background:#fff; padding:16px; direction:rtl; writing-mode:horizontal-tb; font-family:'Assistant',sans-serif;`;
 
         const header = document.createElement('div');
         header.style.cssText = `display:flex; gap:20px; align-items:center; margin-bottom:12px; font-size:15px;`;
