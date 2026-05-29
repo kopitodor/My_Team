@@ -13,12 +13,13 @@
     <div class="sidebar-toggle" onclick="toggleSidebar()">☰</div>
     <div class="nav-header">תפריט</div>
     <button id="nav-games" class="nav-btn active">רשימת משחקים</button>
+    <button id="nav-teams" class="nav-btn">ממוצעי קבוצה</button>
     <button id="nav-players" class="nav-btn">ממוצעי שחקנים</button>
     <button id="nav-season-shotchart" class="nav-btn">מפת זריקות</button>
     <button id="nav-heatmap" class="nav-btn">הרכבים</button>
-    <button id="nav-teams" class="nav-btn">קבוצותי</button>
-    <button id="nav-player-profile" class="nav-btn">שחקנים-אישי</button>
     <button id="nav-with-without" class="nav-btn">עם/בלי</button>
+    <button id="nav-player-profile" class="nav-btn">שחקנים-אישי</button>
+    <button id="nav-compare" class="nav-btn">השוואת שחקנים</button>
 </nav>
 
 <main>
@@ -56,6 +57,10 @@
 
     <section id="sec-with-without" style="display:none;">
         <div id="ww-container"></div>
+    </section>
+
+    <section id="sec-compare" style="display:none;">
+        <div id="compare-container"></div>
     </section>
 
     <section id="sec-heatmap" style="display:none;">

@@ -36,12 +36,13 @@ const SEPARATOR_COLS = ['MIN','PTS','2P%','3P%','FT%','TRB','STL','BA','FD','+/-
    ===================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-games').onclick          = () => goTo('games');
+    document.getElementById('nav-teams').onclick           = () => goTo('teams');
     document.getElementById('nav-players').onclick        = () => goTo('players');
     document.getElementById('nav-season-shotchart').onclick = () => goTo('season-shotchart');
-    document.getElementById('nav-teams').onclick           = () => goTo('teams');
-    document.getElementById('nav-player-profile').onclick  = () => goTo('player-profile');
-    document.getElementById('nav-with-without').onclick    = () => goTo('with-without');
     document.getElementById('nav-heatmap').onclick          = () => goTo('heatmap');
+    document.getElementById('nav-with-without').onclick    = () => goTo('with-without');
+    document.getElementById('nav-player-profile').onclick  = () => goTo('player-profile');
+    document.getElementById('nav-compare').onclick         = () => goTo('compare');
     loadData();
 });
 
@@ -92,7 +93,7 @@ function goTo(id) {
     if (currentSection === id) return;
     currentSection = id;
 
-    const pages = ['games','players','teams','player-profile','season-shotchart','with-without','heatmap'];
+    const pages = ['games','players','teams','player-profile','season-shotchart','with-without','heatmap','compare'];
     pages.forEach(p => {
         const section = document.getElementById('sec-' + p);
         const btn     = document.getElementById('nav-' + p);
@@ -104,7 +105,7 @@ function goTo(id) {
     document.getElementById('nav-' + id).classList.add('active');
 
     renderCurrentSection();
-    if (id !== 'player-profile') renderSeasonFilters();
+    if (id !== 'player-profile' && id !== 'compare') renderSeasonFilters();
 }
 
 /* Only render the section that is currently visible */
@@ -117,6 +118,7 @@ function renderCurrentSection() {
         case 'season-shotchart': populateSeasonShotChart(); break;
         case 'with-without':   renderWithWithout(); break;
         case 'heatmap':        renderHeatmap();     break;
+        case 'compare':        renderCompare();     break;
     }
 }
 
@@ -2065,6 +2067,7 @@ function wwRenderResults() {
    ===================================================== */
 // Heatmap player filter
 let hmActivePlayers = new Set();
+let hmLastSeason    = null;
 
 function renderHeatmap() {
     const container = document.getElementById('heatmap-container');
@@ -2086,9 +2089,11 @@ function renderHeatmap() {
     });
     const allPlayers = [...playerSet].sort((a, b) => a.localeCompare(b, 'he'));
 
-    // Reset filter if stale (season changed or games toggled)
+    // Reset to all players when the season changes, or on first load
+    const seasonChanged = currentSeason !== hmLastSeason;
+    hmLastSeason = currentSeason;
     const validActive = [...hmActivePlayers].filter(p => playerSet.has(p));
-    if (validActive.length === 0) hmActivePlayers = new Set(allPlayers);
+    if (validActive.length === 0 || seasonChanged) hmActivePlayers = new Set(allPlayers);
 
     const players = allPlayers.filter(p => hmActivePlayers.has(p));
     const n = players.length;
@@ -2176,7 +2181,7 @@ function renderHeatmap() {
         <span>גרוע</span>
         <div style="width:160px;height:12px;border-radius:6px;background:linear-gradient(to left,rgb(180,30,30),rgb(180,180,180),rgb(40,130,40));flex-shrink:0;"></div>
         <span>טוב</span><span style="margin:0 8px;">|</span>
-        <span>מספר גדול = דקות יחד &nbsp;·&nbsp; קטן = +/- ל-40 דקות</span>
+        <span>דקות יחד&emsp;|&emsp; +/- &nbsp;&nbsp;ל-40 דקות</span>
     </div></div>`;
 
     html += `<div class="share-btn-row">
@@ -2673,4 +2678,227 @@ function shareRotation(btn) {
     const content = document.getElementById('rotation-content');
     if (!content) return;
     shareElement(content, `rotation.png`, btn);
+}
+/* =====================================================
+
+/* =====================================================
+   Compare Players page  (השוואת שחקנים)
+   ===================================================== */
+
+let cmpLeftPid      = null;
+let cmpRightPid     = null;
+let cmpLeftSeasons  = new Set();
+let cmpRightSeasons = new Set();
+let cmpAdvMode      = false;
+
+// Stat rows for normal mode
+const CMP_STATS = [
+    { label: 'GP',   get: t => t ? t.gp : '-', isRaw: true },
+    { label: 'MIN',  col: 'MIN' },
+    { label: 'PTS',  col: 'PTS' },
+    { label: 'DREB', col: 'DRB' },
+    { label: 'OREB', col: 'ORB' },
+    { label: 'REB',  col: 'TRB' },
+    { label: 'AST',  col: 'AST' },
+    { label: 'TOV',  col: 'TOV', lowerBetter: true },
+    { label: 'STL',  col: 'STL' },
+    { label: 'BLK',  col: 'BLK' },
+    { label: 'PF',   col: 'PF',  lowerBetter: true },
+    { label: 'FD',   col: 'FD' },
+    { label: '2P%',  col: '2P%', isPct: true },
+    { label: '3P%',  col: '3P%', isPct: true },
+    { label: 'FT%',  col: 'FT%', isPct: true },
+    { label: '+/-',  col: '+/-' },
+    { label: 'PIR',  col: 'PIR' },
+    { label: 'USG%', col: 'USG%', isPct: true },
+];
+
+// Stat rows for advanced mode
+const CMP_ADV_STATS = [
+    { label: 'GP',     get: t => t ? t.gp : '-', isRaw: true },
+    { label: 'MIN',    col: 'MIN' },
+    { label: 'eFG%',   adv: 'eFG%' },
+    { label: 'TS%',    adv: 'TS%' },
+    { label: 'AST/TO', adv: 'AST/TO' },
+    { label: 'ORB%',   adv: 'ORB%' },
+    { label: 'DRB%',   adv: 'DRB%' },
+    { label: 'USG%',   col: 'USG%', isPct: true },
+];
+
+function renderCompare() {
+    const container = document.getElementById('compare-container');
+    if (!container) return;
+
+    const allPlayers = Object.values(data.players).sort((a, b) => a.Name.localeCompare(b.Name, 'he'));
+
+    const opts = (selPid) => allPlayers.map(p =>
+        `<option value="${p.player_id}" ${String(p.player_id) === String(selPid) ? 'selected' : ''}>${p.Name}</option>`
+    ).join('');
+
+    container.innerHTML = `
+        <div class="cmp-header">
+            <div class="cmp-player-col cmp-left-col">
+                <select class="player-dropdown cmp-select" onchange="cmpSetPlayer('left',this.value)">
+                    <option value="">בחר שחקן...</option>${opts(cmpLeftPid)}
+                </select>
+                <div id="cmp-left-seasons" class="cmp-season-pills"></div>
+            </div>
+            <div class="cmp-vs-badge">VS</div>
+            <div class="cmp-player-col cmp-right-col">
+                <select class="player-dropdown cmp-select" onchange="cmpSetPlayer('right',this.value)">
+                    <option value="">בחר שחקן...</option>${opts(cmpRightPid)}
+                </select>
+                <div id="cmp-right-seasons" class="cmp-season-pills"></div>
+            </div>
+        </div>
+        <div class="cmp-mode-row">
+            <div class="mode-toggle-group" style="max-width:220px; margin: 0 auto;">
+                <button class="mode-btn ${!cmpAdvMode ? 'active' : ''}" onclick="cmpSetMode(false)">AVG</button>
+                <button class="mode-btn ${cmpAdvMode  ? 'active' : ''}" onclick="cmpSetMode(true)">ADV</button>
+            </div>
+        </div>
+        <div id="cmp-table-area"></div>`;
+
+    cmpRenderSeasonPills('left');
+    cmpRenderSeasonPills('right');
+    cmpRenderTable();
+}
+
+function cmpSetMode(adv) {
+    cmpAdvMode = adv;
+    document.querySelectorAll('.cmp-mode-row .mode-btn').forEach((b, i) => b.classList.toggle('active', adv ? i === 1 : i === 0));
+    cmpRenderTable();
+}
+
+function cmpSetPlayer(side, pid) {
+    if (side === 'left')  { cmpLeftPid = pid || null;  cmpLeftSeasons  = new Set(); }
+    else                  { cmpRightPid = pid || null; cmpRightSeasons = new Set(); }
+    cmpRenderSeasonPills('left');
+    cmpRenderSeasonPills('right');
+    cmpRenderTable();
+}
+
+function cmpGetPlayerSeasons(pid) {
+    if (!pid) return [];
+    const gameIds = new Set(data.playersStats.filter(s => String(s.player_id) === String(pid)).map(s => String(s.game_id)));
+    return getSortedSeasons().filter(s => data.games.filter(g => g.season === s).some(g => gameIds.has(String(g.game_id))));
+}
+
+function cmpRenderSeasonPills(side) {
+    const el     = document.getElementById(`cmp-${side}-seasons`);
+    if (!el) return;
+    const pid    = side === 'left' ? cmpLeftPid : cmpRightPid;
+    const active = side === 'left' ? cmpLeftSeasons : cmpRightSeasons;
+    const seasons = cmpGetPlayerSeasons(pid);
+    if (!seasons.length) { el.innerHTML = ''; return; }
+    if (active.size === 0) seasons.forEach(s => active.add(s));
+    const allOn = active.size === seasons.length;
+    el.innerHTML =
+        `<div class="season-pill ${allOn ? 'active' : ''}" onclick="cmpToggleAllSeasons('${side}')">כולם</div>` +
+        seasons.map(s => `<div class="season-pill ${active.has(s) ? 'active' : ''}" onclick="cmpToggleSeason('${side}','${s}')">${s}</div>`).join('');
+}
+
+function cmpToggleSeason(side, s) {
+    const active  = side === 'left' ? cmpLeftSeasons : cmpRightSeasons;
+    if (active.has(s)) { if (active.size > 1) active.delete(s); }
+    else active.add(s);
+    cmpRenderSeasonPills(side);
+    cmpRenderTable();
+}
+
+function cmpToggleAllSeasons(side) {
+    const active  = side === 'left' ? cmpLeftSeasons : cmpRightSeasons;
+    const seasons = cmpGetPlayerSeasons(side === 'left' ? cmpLeftPid : cmpRightPid);
+    if (active.size === seasons.length) { active.clear(); if (seasons.length) active.add(seasons[0]); }
+    else seasons.forEach(s => active.add(s));
+    cmpRenderSeasonPills(side);
+    cmpRenderTable();
+}
+
+function cmpGetStats(pid, activeSeasons) {
+    if (!pid || !activeSeasons.size) return null;
+    const seasonGameIds = new Set(
+        data.games
+            .filter(g => activeSeasons.has(String(g.season)) && !disabledGameIds.has(String(g.game_id)))
+            .map(g => String(g.game_id))
+    );
+    const rows = data.playersStats.filter(s => String(s.player_id) === String(pid) && seasonGameIds.has(String(s.game_id)));
+    return rows.length ? aggregatePlayerStats(rows) : null;
+}
+
+function cmpGetVal(t, row) {
+    if (!t) return '-';
+    if (row.isRaw)  return t.gp;
+    if (row.adv)    return calculateAdvanced(t, true)[row.adv] ?? '-';
+    if (row.isPct)  return getCellValue(t, row.col, 'AVG');
+    return smartRound(getCellValue(t, row.col, 'AVG'));
+}
+
+function numVal(v) {
+    if (v === '-' || v == null) return null;
+    return parseFloat(String(v).replace('%', ''));
+}
+
+function cmpRenderTable() {
+    const area = document.getElementById('cmp-table-area');
+    if (!area) return;
+
+    if (!cmpLeftPid || !cmpRightPid) {
+        area.innerHTML = `<p class="ww-hint" style="text-align:center;padding:40px 20px;">בחר שני שחקנים להשוואה.</p>`;
+        return;
+    }
+
+    const leftName  = data.players[cmpLeftPid]?.Name  || '??';
+    const rightName = data.players[cmpRightPid]?.Name || '??';
+    const leftTotal  = cmpGetStats(cmpLeftPid,  cmpLeftSeasons);
+    const rightTotal = cmpGetStats(cmpRightPid, cmpRightSeasons);
+
+    const statList = cmpAdvMode ? CMP_ADV_STATS : CMP_STATS;
+
+    const tableRows = statList.map(row => {
+        const lv = cmpGetVal(leftTotal,  row);
+        const rv = cmpGetVal(rightTotal, row);
+        const ln = numVal(lv);
+        const rn = numVal(rv);
+
+        let lWin = false, rWin = false;
+        if (ln !== null && rn !== null && ln !== rn) {
+            const leftBetter = row.lowerBetter ? ln < rn : ln > rn;
+            lWin = leftBetter;
+            rWin = !leftBetter;
+        }
+
+        return `<tr>
+            <td class="cmp-val cmp-val-left  ${lWin ? 'cmp-winner' : ''}">${lv}</td>
+            <td class="cmp-label">${row.label}</td>
+            <td class="cmp-val cmp-val-right ${rWin ? 'cmp-winner' : ''}">${rv}</td>
+        </tr>`;
+    }).join('');
+
+    // Build season subtitle strings for each side
+    const leftSeasonLabel  = [...cmpLeftSeasons].join(', ');
+    const rightSeasonLabel = [...cmpRightSeasons].join(', ');
+
+    area.innerHTML = `
+        <div id="cmp-share-target">
+            <div class="table-wrapper cmp-table-wrap">
+                <table class="box-table cmp-table">
+                    <thead><tr>
+                        <th class="cmp-th-left">
+                            <div class="cmp-th-name">${leftName}</div>
+                            <div class="cmp-th-seasons">${leftSeasonLabel}</div>
+                        </th>
+                        <th class="cmp-th-center">סטט</th>
+                        <th class="cmp-th-right">
+                            <div class="cmp-th-name">${rightName}</div>
+                            <div class="cmp-th-seasons">${rightSeasonLabel}</div>
+                        </th>
+                    </tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        </div>
+        <div class="share-btn-row">
+            <button class="share-btn" onclick="shareElement(document.getElementById('cmp-share-target'), 'compare.png', this)">📷 שתף</button>
+        </div>`;
 }
