@@ -15,7 +15,8 @@ let shareMode        = false;
 // With/Without page state
 let wwPrimaryPid   = null;
 let wwSecondaryPid = null;
-let wwActiveSeasons = new Set(); // seasons selected via pills on the ww page
+let wwActiveSeasons = new Set();
+
 
 // Our team name per game_id — built once after load (we are always listed first in teams_stats)
 const MY_TEAM_BY_GAME = {};
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-teams').onclick           = () => goTo('teams');
     document.getElementById('nav-player-profile').onclick  = () => goTo('player-profile');
     document.getElementById('nav-with-without').onclick    = () => goTo('with-without');
+    document.getElementById('nav-heatmap').onclick          = () => goTo('heatmap');
     loadData();
 });
 
@@ -90,7 +92,7 @@ function goTo(id) {
     if (currentSection === id) return;
     currentSection = id;
 
-    const pages = ['games','players','teams','player-profile','season-shotchart','with-without'];
+    const pages = ['games','players','teams','player-profile','season-shotchart','with-without','heatmap'];
     pages.forEach(p => {
         const section = document.getElementById('sec-' + p);
         const btn     = document.getElementById('nav-' + p);
@@ -114,6 +116,7 @@ function renderCurrentSection() {
         case 'player-profile': renderPlayerProfile(); break;
         case 'season-shotchart': populateSeasonShotChart(); break;
         case 'with-without':   renderWithWithout(); break;
+        case 'heatmap':        renderHeatmap();     break;
     }
 }
 
@@ -124,6 +127,7 @@ function renderAll() {
     populateTeams();
     populateSeasonShotChart();
     if (currentSection === 'player-profile') renderPlayerProfile();
+    if (currentSection === 'heatmap') renderHeatmap();
     applyTableSeparators();
 }
 
@@ -265,9 +269,9 @@ function handleGameToggle(id, chk, e) {
     e.stopPropagation();
     if (chk) { disabledGameIds.delete(String(id)); activeGameIds.add(String(id)); }
     else      { disabledGameIds.add(String(id));    activeGameIds.delete(String(id)); }
-    // Re-render players & teams (which depend on activeGameIds), but NOT games list
     populatePlayers();
     populateTeams();
+    renderHeatmap(); // always recalculate so CAP updates even when heatmap isn't visible
     applyTableSeparators();
 }
 
@@ -2056,6 +2060,161 @@ function wwRenderResults() {
     applyTableSeparators();
 }
 
+/* =====================================================
+   Heatmap page  (הרכבים)
+   ===================================================== */
+// Heatmap player filter
+let hmActivePlayers = new Set();
+
+function renderHeatmap() {
+    const container = document.getElementById('heatmap-container');
+    if (!container) return;
+
+    // Use activeGameIds (respects toggled-off games) filtered to current season
+    const rotations = (data.rotations || []).filter(r => activeGameIds.has(String(r.game_id)));
+
+    if (!rotations.length) {
+        container.innerHTML = `<p style="padding:40px;text-align:center;color:#64748b;">אין נתוני רוטציה לעונה זו.</p>`;
+        return;
+    }
+
+    const playerSet = new Set();
+    rotations.forEach(r => {
+        (r.segments || []).forEach(seg => {
+            (seg.players || []).forEach(p => { if (p) playerSet.add(p); });
+        });
+    });
+    const allPlayers = [...playerSet].sort((a, b) => a.localeCompare(b, 'he'));
+
+    // Reset filter if stale (season changed or games toggled)
+    const validActive = [...hmActivePlayers].filter(p => playerSet.has(p));
+    if (validActive.length === 0) hmActivePlayers = new Set(allPlayers);
+
+    const players = allPlayers.filter(p => hmActivePlayers.has(p));
+    const n = players.length;
+
+    if (n < 2) {
+        const btns = buildHmPlayerButtons(allPlayers);
+        container.innerHTML = btns + `<p style="padding:20px;text-align:center;color:#64748b;">בחר לפחות 2 שחקנים.</p>`;
+        return;
+    }
+
+    const sharedMin = Array.from({length:n}, () => new Array(n).fill(0));
+    const sharedPM  = Array.from({length:n}, () => new Array(n).fill(0));
+
+    function parseScoreDelta(s) {
+        const nums = String(s||'').match(/\d+/g);
+        return nums && nums.length >= 2 ? parseInt(nums[0]) - parseInt(nums[1]) : 0;
+    }
+
+    rotations.forEach(r => {
+        const segs = r.segments || [];
+        segs.forEach((seg, idx) => {
+            const dur = seg.range[1] - seg.range[0];
+            if (dur <= 0) return;
+            const segPM = parseScoreDelta(seg.score) - (idx > 0 ? parseScoreDelta(segs[idx-1].score) : 0);
+            const inGame = (seg.players || []).filter(p => players.includes(p));
+            for (let a = 0; a < inGame.length; a++) {
+                const ai = players.indexOf(inGame[a]);
+                if (ai < 0) continue;
+                for (let b = a + 1; b < inGame.length; b++) {
+                    const bi = players.indexOf(inGame[b]);
+                    if (bi < 0) continue;
+                    sharedMin[ai][bi] += dur; sharedMin[bi][ai] += dur;
+                    sharedPM[ai][bi]  += segPM; sharedPM[bi][ai] += segPM;
+                }
+            }
+        });
+    });
+
+    // CAP = 90th percentile of absolute per-40 values
+    const allPer40 = [];
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            if (i !== j && sharedMin[i][j] > 0)
+                allPer40.push(Math.abs(sharedPM[i][j] / (sharedMin[i][j] / 40)));
+    allPer40.sort((a, b) => a - b);
+    const p90idx = Math.floor(allPer40.length * 0.9);
+    const CAP = allPer40.length > 0 ? Math.max(allPer40[p90idx] || allPer40[allPer40.length - 1], 5) : 20;
+
+    function lerpRGB(r1,g1,b1,r2,g2,b2,t) {
+        return [Math.round(r1+(r2-r1)*t),Math.round(g1+(g2-g1)*t),Math.round(b1+(b2-b1)*t)];
+    }
+    function pmColor(totalPM, totalMin) {
+        if (totalMin === 0) return {bg:'var(--color-background-secondary)',fg:'transparent'};
+        const t = Math.max(-1, Math.min(1, (totalPM/(totalMin/40)) / CAP));
+        const rgb = t < 0 ? lerpRGB(180,180,180,180,30,30,-t) : t > 0 ? lerpRGB(180,180,180,40,130,40,t) : [180,180,180];
+        const bg = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+        return {bg, fg: (rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000 > 130 ? '#1e293b' : '#ffffff'};
+    }
+
+    const CELL=68, LABEL_W=140, COL_H=130, FS=18;
+    let html = buildHmPlayerButtons(allPlayers);
+    html += `<div id="heatmap-share-target" style="padding:20px;overflow-x:auto;"><div style="display:inline-flex;flex-direction:column;gap:2px;direction:ltr;">`;
+
+    html += `<div style="display:flex;gap:2px;"><div style="width:${LABEL_W}px;flex-shrink:0;"></div>`;
+    players.forEach(p => {
+        html += `<div style="width:${CELL}px;flex-shrink:0;font-size:${FS}px;font-weight:700;color:var(--color-text-primary);writing-mode:vertical-rl;transform:rotate(180deg);height:${COL_H}px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;">${p}</div>`;
+    });
+    html += `</div>`;
+
+    players.forEach((pA, i) => {
+        html += `<div style="display:flex;gap:2px;align-items:center;"><div style="width:${LABEL_W}px;flex-shrink:0;font-size:${FS}px;font-weight:700;color:var(--color-text-primary);text-align:right;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${pA}</div>`;
+        players.forEach((pB, j) => {
+            if (i === j) { html += `<div style="width:${CELL}px;height:${CELL}px;flex-shrink:0;background:var(--color-background-secondary);border-radius:6px;"></div>`; return; }
+            const mins = Math.round(sharedMin[i][j]);
+            const per40 = sharedMin[i][j] > 0 ? parseFloat((sharedPM[i][j]/(sharedMin[i][j]/40)).toFixed(1)) : 0;
+            const c = pmColor(sharedPM[i][j], sharedMin[i][j]);
+            const sign = per40 > 0 ? '+' : '';
+            html += `<div title="${pA} + ${pB}: ${mins} דק׳, ${sign}${per40} ל-40" style="width:${CELL}px;height:${CELL}px;flex-shrink:0;border-radius:6px;background:${c.bg};color:${c.fg};display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700;gap:2px;cursor:default;"><span>${mins}</span><span style="font-size:11px;font-weight:500;opacity:0.9;">${sign}${per40}</span></div>`;
+        });
+        html += `</div>`;
+    });
+
+    html += `</div>`;
+    html += `<div style="display:flex;align-items:center;gap:10px;margin-top:16px;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap;direction:rtl;">
+        <span>גרוע</span>
+        <div style="width:160px;height:12px;border-radius:6px;background:linear-gradient(to left,rgb(180,30,30),rgb(180,180,180),rgb(40,130,40));flex-shrink:0;"></div>
+        <span>טוב</span><span style="margin:0 8px;">|</span>
+        <span>מספר גדול = דקות יחד &nbsp;·&nbsp; קטן = +/- ל-40 דקות</span>
+    </div></div>`;
+
+    html += `<div class="share-btn-row">
+        <button class="share-btn" onclick="shareElement(document.getElementById('heatmap-share-target'), 'heatmap.png', this)">📷 שתף</button>
+    </div>`;
+
+    container.innerHTML = html;
+}
+
+function buildHmPlayerButtons(allPlayers) {
+    const allOn = allPlayers.every(p => hmActivePlayers.has(p));
+    const btns = allPlayers.map(p =>
+        `<button class="sc-player-btn ${hmActivePlayers.has(p) ? 'sc-btn-on' : ''}" onclick="hmTogglePlayer('${p}')">${p}</button>`
+    ).join('');
+    return `<div style="padding:12px 20px 4px;display:flex;flex-wrap:wrap;gap:6px;direction:rtl;">
+        <button class="sc-player-btn sc-all-btn ${allOn ? 'sc-btn-on' : ''}" onclick="hmToggleAll()">כולם</button>
+        ${btns}</div>`;
+}
+
+function hmTogglePlayer(p) {
+    if (hmActivePlayers.has(p)) {
+        if (hmActivePlayers.size > 2) hmActivePlayers.delete(p);
+    } else {
+        hmActivePlayers.add(p);
+    }
+    renderHeatmap();
+}
+
+function hmToggleAll() {
+    const seasonGameIds = new Set(data.games.filter(g => String(g.season) === String(currentSeason)).map(g => String(g.game_id)));
+    const playerSet = new Set();
+    (data.rotations||[]).filter(r => activeGameIds.has(String(r.game_id))).forEach(r => {
+        (r.segments||[]).forEach(seg => (seg.players||[]).forEach(p => { if(p) playerSet.add(p); }));
+    });
+    const all = [...playerSet];
+    hmActivePlayers = hmActivePlayers.size === all.length ? new Set(all.slice(0, 2)) : new Set(all);
+    renderHeatmap();
+}
 
 function loadHtml2Canvas() {
     return new Promise((resolve, reject) => {
@@ -2297,6 +2456,31 @@ async function shareElement(el, filename, activeBtn) {
             svg.style.transform       = 'none';
             svg.style.transformOrigin = '';
         });
+
+        // Fix heatmap column labels: writing-mode+rotate breaks in html2canvas
+        // Just render as plain horizontal text like the row labels
+        clone.querySelectorAll('[style*="writing-mode"]').forEach(node => {
+            const text = node.textContent.trim();
+            node.style.writingMode     = '';
+            node.style.transform       = '';
+            node.style.transformOrigin = '';
+            node.style.display         = 'flex';
+            node.style.alignItems      = 'flex-end';
+            node.style.justifyContent  = 'center';
+            node.style.whiteSpace      = 'nowrap';
+            node.textContent = text;
+        });
+
+        // For heatmap: size wrapper tightly to the actual grid (no padding on left side)
+        if (el.id === 'heatmap-share-target') {
+            const gridEl = el.querySelector('[style*="inline-flex"]');
+            if (gridEl) {
+                const gridW = gridEl.scrollWidth;
+                wrapper.style.width   = gridW + 'px';
+                wrapper.style.padding = '16px';
+                wrapper.style.left    = `-${gridW + 500}px`;
+            }
+        }
 
         // Inline ww-title styles so html2canvas renders them correctly
         const cloneTitle = clone.querySelector('.ww-title');
