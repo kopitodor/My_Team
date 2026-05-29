@@ -43,6 +43,32 @@ document.addEventListener('DOMContentLoaded', () => {
     loadData();
 });
 
+/* =====================================================
+   Orientation / resize — re-render visible shot charts
+   ===================================================== */
+(function () {
+    let _scResizeTimer = null;
+    function onOrientationChange() {
+        clearTimeout(_scResizeTimer);
+        _scResizeTimer = setTimeout(() => {
+            if (document.getElementById('ssc-half-court')) sscUpdateCourt();
+            if (document.getElementById('psc-half-court')) pscUpdateCourt();
+            if (document.getElementById('shot-chart-modal')?.classList.contains('open') &&
+                document.getElementById('sc-half-court')) {
+                const sc = window._currentGameSC;
+                if (sc) scUpdateCourt(sc);
+            }
+        }, 150);
+    }
+    if (screen?.orientation) screen.orientation.addEventListener('change', onOrientationChange);
+    window.addEventListener('orientationchange', onOrientationChange);
+    window.addEventListener('resize', onOrientationChange);
+})();
+
+function toggleSidebar() {
+    document.body.classList.toggle('sidebar-closed');
+}
+
 function toggleShareMode(btn) {
     shareMode = !shareMode;
     document.body.classList.toggle('share-mode', shareMode);
@@ -1339,11 +1365,9 @@ function populateSeasonShotChart() {
         unifiedSc.player_mapping[pidToChar[pid]] = pid;
     });
 
-    // Init season active players (all on by default, persist across re-renders)
+    // Always reset to all players — chars are reassigned per season so old selections are meaningless
     const allChars = new Set(playerIdList.map(pid => pidToChar[pid]));
-    // Keep existing selection if still valid, else reset to all
-    const validExisting = [...scSeasonActivePlayers].filter(c => allChars.has(c));
-    scSeasonActivePlayers = validExisting.length > 0 ? new Set(validExisting) : new Set(allChars);
+    scSeasonActivePlayers = new Set(allChars);
 
     // Build player buttons
     const playerBtns = playerIdList.map(pid => {
@@ -1759,6 +1783,7 @@ function openShotChartModal(gameId) {
     });
 
     requestAnimationFrame(() => {
+        window._currentGameSC = sc;
         scUpdateCourt(sc);
         const panel = modal.querySelector('.sc-player-panel');
         if (panel) {
@@ -1777,8 +1802,7 @@ function closeShotChartModal() {
     const modal = document.getElementById('shot-chart-modal');
     modal.classList.remove('open');
     document.body.style.overflow = '';
-
-    // Also close on backdrop click
+    window._currentGameSC = null;
     modal.onclick = null;
 }
 
@@ -2002,6 +2026,7 @@ function wwRenderResults() {
     }
 
     resultsEl.innerHTML = `
+        <div id="ww-share-target">
         <div class="ww-title">
             <span class="ww-p1">${p1Name}</span>
             <span class="ww-vs">עם / בלי</span>
@@ -2023,8 +2048,9 @@ function wwRenderResults() {
                 </tbody>
             </table>
         </div>
+        </div>
         <div class="share-btn-row">
-            <button class="share-btn" onclick="shareElement(document.querySelector('#ww-results .table-wrapper'), 'with_without.png', this)">📷 שתף</button>
+            <button class="share-btn" onclick="shareElement(document.getElementById('ww-share-target'), 'with_without.png', this)">📷 שתף</button>
         </div>`;
 
     applyTableSeparators();
@@ -2104,8 +2130,24 @@ async function shareShotChart(svgId, badgesId, filename, activeBtn) {
         const BADGE_H   = 76;
         const BADGE_GAP = 14;
         const totalBadgeH = badgeData.length * (BADGE_H + BADGE_GAP) - BADGE_GAP;
+
+        // Profile chart header (player name + seasons)
+        const isProfileChart = svgId === 'psc-half-court';
+        let headerName = '';
+        let headerSeasonsList = [];
+        if (isProfileChart && window._pscPid) {
+            headerName        = data.players[window._pscPid]?.Name || '';
+            headerSeasonsList = (window._pscSeasons || []).filter(s => scProfileActiveSeasons.has(s));
+        }
+        const NAME_SIZE   = 22;
+        const SEASON_SIZE = 14;
+        const LINE_GAP    = 6;
+        const HEADER_H = (isProfileChart && headerName)
+            ? PAD + NAME_SIZE + LINE_GAP + headerSeasonsList.length * (SEASON_SIZE + LINE_GAP)
+            : 0;
+
         const canvasW   = courtW + BADGE_W + PAD * 3;
-        const canvasH   = Math.max(courtH, totalBadgeH) + PAD * 2;
+        const canvasH   = Math.max(courtH, HEADER_H + totalBadgeH) + PAD * 2;
 
         const canvas  = document.createElement('canvas');
         canvas.width  = canvasW * 2;
@@ -2138,7 +2180,22 @@ async function shareShotChart(svgId, badgesId, filename, activeBtn) {
 
         // -- 5. Draw badge panel to the right of the court
         const panelX = PAD + courtW + PAD;
-        const startY = PAD + Math.max(0, (canvasH - PAD * 2 - totalBadgeH) / 2);
+
+        // Profile chart: draw player name + active seasons above badges
+        if (isProfileChart && headerName) {
+            const hx = panelX + BADGE_W / 2;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#1e293b';
+            ctx.font = `800 ${NAME_SIZE}px 'Assistant', Arial, sans-serif`;
+            ctx.fillText(headerName, hx, PAD + NAME_SIZE);
+            ctx.fillStyle = '#64748b';
+            ctx.font = `600 ${SEASON_SIZE}px 'Assistant', Arial, sans-serif`;
+            headerSeasonsList.forEach((s, i) => {
+                ctx.fillText(s, hx, PAD + NAME_SIZE + LINE_GAP + (i + 1) * (SEASON_SIZE + LINE_GAP));
+            });
+        }
+
+        const startY = PAD + HEADER_H + Math.max(0, (canvasH - PAD * 2 - HEADER_H - totalBadgeH) / 2);
 
         badgeData.forEach((b, i) => {
             const bx = panelX;
@@ -2196,20 +2253,17 @@ async function shareElement(el, filename, activeBtn) {
     try {
         await loadHtml2Canvas();
 
-        // Measure the inner table's full size (not the scrollable wrapper's visible size)
         const innerTable = el.querySelector('table') || el;
         const fullW = innerTable.scrollWidth;
-        const fullH = innerTable.scrollHeight;
 
         const wrapper = document.createElement('div');
         wrapper.style.cssText = `
-            position: fixed;
-            top: -99999px;
-            left: -99999px;
+            position: absolute;
+            top: 0;
+            left: -${fullW + 100}px;
             width: ${fullW + 32}px;
             background: #ffffff;
             padding: 16px;
-            z-index: -1;
             direction: rtl;
             writing-mode: horizontal-tb;
             box-sizing: content-box;
@@ -2223,35 +2277,43 @@ async function shareElement(el, filename, activeBtn) {
         clone.style.height    = 'auto';
         clone.style.width     = 'auto';
 
-        // Fix all inner scrollable elements
         clone.querySelectorAll('*').forEach(node => {
             node.style.overflow  = 'visible';
             node.style.overflowX = 'visible';
             node.style.overflowY = 'visible';
             node.style.maxHeight = 'none';
             node.style.maxWidth  = 'none';
-            // Strip sticky positioning — breaks layout when off-screen
             if (node.style.position === 'sticky' ||
                 window.getComputedStyle(node).position === 'sticky') {
                 node.style.position = 'static';
             }
         });
 
-        // Also strip sticky from th/td with player-name-cell class
         clone.querySelectorAll('.player-name-cell, th, td').forEach(node => {
             node.style.position = 'static';
         });
 
-        // Counter-rotate any court SVGs
         clone.querySelectorAll('.sc-court-svg').forEach(svg => {
             svg.style.transform       = 'none';
             svg.style.transformOrigin = '';
         });
 
+        // Inline ww-title styles so html2canvas renders them correctly
+        const cloneTitle = clone.querySelector('.ww-title');
+        if (cloneTitle) {
+            cloneTitle.style.cssText = 'display:flex; align-items:center; gap:10px; padding:14px 20px 6px; flex-wrap:wrap; direction:rtl;';
+            const p1 = cloneTitle.querySelector('.ww-p1');
+            const vs = cloneTitle.querySelector('.ww-vs');
+            const p2 = cloneTitle.querySelector('.ww-p2');
+            if (p1) p1.style.cssText = 'font-weight:800; font-size:1.1rem; color:#1e293b;';
+            if (vs) vs.style.cssText = 'font-size:1.1rem; font-weight:400; color:#1e293b;';
+            if (p2) p2.style.cssText = 'font-weight:800; font-size:1.1rem; color:#1e293b;';
+        }
+
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
 
-        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        await new Promise(r => requestAnimationFrame(r));
 
         const canvas = await html2canvas(wrapper, {
             backgroundColor: '#ffffff',
@@ -2268,9 +2330,12 @@ async function shareElement(el, filename, activeBtn) {
 
         canvas.toBlob(async blob => {
             const file = new File([blob], filename, { type: 'image/png' });
+            let shared = false;
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: filename });
-            } else {
+                try { await navigator.share({ files: [file], title: filename }); shared = true; }
+                catch(e) { console.warn('share fell back to download', e); }
+            }
+            if (!shared) {
                 const a = document.createElement('a');
                 a.href  = URL.createObjectURL(blob);
                 a.download = filename;
@@ -2279,8 +2344,9 @@ async function shareElement(el, filename, activeBtn) {
             }
             if (activeBtn) { activeBtn.textContent = '📷 שתף'; activeBtn.disabled = false; }
         }, 'image/png');
+
     } catch(e) {
-        console.error('share failed', e);
+        console.error('shareElement failed', e);
         if (activeBtn) { activeBtn.textContent = '📷 שתף'; activeBtn.disabled = false; }
     }
 }
