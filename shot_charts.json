@@ -493,5 +493,38 @@
       "layup": "EgIkdbBKBCGEIiEcaaGbk"
     },
     "game_id": 29
+  },
+  {
+    "player_mapping": {
+      "A": 1,
+      "B": 4,
+      "C": 23,
+      "D": 15,
+      "E": 6,
+      "F": 7,
+      "G": 8,
+      "H": 9,
+      "I": 10,
+      "J": 11,
+      "K": 12,
+      "L": 21
+    },
+    "shots_data": {
+      "right_corner_3": "gbfgfi",
+      "left_corner_3": "dfD",
+      "right_45_3": "gdkgD",
+      "left_45_3": "DdFgDffId",
+      "top_of_the_key": "hdbdDdbiDf",
+      "right_corner_mid": "BBD",
+      "left_corner_mid": "0",
+      "right_45_mid": "0",
+      "left_45_mid": "g",
+      "free_throw_line": "h",
+      "right_floater": "dLlfH",
+      "left_floater": "LLLLg",
+      "front_floater": "IhhBhg",
+      "layup": "HLkIIlgGHLggLLhlLGlBG"
+    },
+    "game_id": 49
   }
 ]
